@@ -1,0 +1,17 @@
+{
+  "mappings": {
+    "properties": {
+      "id":              { "type": "keyword" },
+      "platform":        { "type": "keyword" },
+      "text":            { "type": "text" },
+      "author":          { "type": "keyword" },
+      "created_at":      { "type": "date" },
+      "sentiment":       { "type": "float" },
+      "sentiment_label": { "type": "keyword" },
+      "topic":           { "type": "keyword" },
+      "location":        { "type": "keyword" },
+      "subreddit":       { "type": "keyword" },
+      "score":           { "type": "integer" }
+    }
+  }
+}

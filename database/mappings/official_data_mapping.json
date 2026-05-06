@@ -1,0 +1,11 @@
+{
+  "mappings": {
+    "properties": {
+      "date":     { "type": "date" },
+      "price":    { "type": "float" },
+      "type":     { "type": "keyword" },
+      "location": { "type": "keyword" },
+      "source":   { "type": "keyword" }
+    }
+  }
+}

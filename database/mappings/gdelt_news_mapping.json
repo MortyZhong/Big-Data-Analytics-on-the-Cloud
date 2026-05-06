@@ -1,0 +1,14 @@
+{
+  "mappings": {
+    "properties": {
+      "id":          { "type": "keyword" },
+      "title":       { "type": "text" },
+      "url":         { "type": "keyword" },
+      "source":      { "type": "keyword" },
+      "created_at":  { "type": "date" },
+      "topic":       { "type": "keyword" },
+      "sentiment":   { "type": "float" },
+      "country":     { "type": "keyword" }
+    }
+  }
+}
