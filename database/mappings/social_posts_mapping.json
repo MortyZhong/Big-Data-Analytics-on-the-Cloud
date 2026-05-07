@@ -11,7 +11,12 @@
       "topic":           { "type": "keyword" },
       "location":        { "type": "keyword" },
       "subreddit":       { "type": "keyword" },
-      "score":           { "type": "integer" }
+      "score":           { "type": "integer" },
+      "language":        { "type": "keyword" },
+      "tags":            { "type": "keyword" },
+      "reblogs":         { "type": "integer" },
+      "favourites":      { "type": "integer" },
+      "url":             { "type": "keyword" }
     }
   }
 }
