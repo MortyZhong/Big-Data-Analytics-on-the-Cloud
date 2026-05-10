@@ -1,0 +1,5 @@
+elasticsearch==8.13.0
+Mastodon.py==2.2.1
+atproto==0.0.65
+requests==2.31.0
+redis==5.0.1

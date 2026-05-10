@@ -1,15 +1,28 @@
 # Team: 68 | Name: Kuiyuan Shu | Student ID: 1345012
 
 from atproto import Client
-from elasticsearch import Elasticsearch
+import redis
+import json
 import time
 import os
 
-BLUESKY_HANDLE = os.environ.get("BLUESKY_HANDLE", "kuiyuanshu.bsky.social")
-BLUESKY_PASSWORD = os.environ.get("BLUESKY_PASSWORD", "")
-ES_HOST = os.environ.get("ES_HOST", "https://elasticsearch-es-http.elastic.svc.cluster.local:9200")
-ES_USER = os.environ.get("ES_USER", "elastic")
-ES_PASS = os.environ.get("ES_PASS", "elastic")
+def read_secret(name):
+    secret_path = f"/secrets/default/harvester-secrets/{name}"
+    try:
+        with open(secret_path, "r") as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return os.environ.get(name, "")
+
+BLUESKY_HANDLE = "kuiyuanshu.bsky.social"
+BLUESKY_PASSWORD = read_secret("BLUESKY_PASSWORD")
+REDIS_HOST = "redis.redis.svc.cluster.local"
+REDIS_PORT = 6379
+REDIS_PASS = ""
+
+PLATFORM = "bluesky"
+QUEUE_KEY = "social_posts:queue"
+DEDUP_KEY = "social_posts:" + PLATFORM + ":seen_uris"
 
 KEYWORDS = ["Australia war", "Australia Iran", "tariff Australia", "oil Australia", "AusPol"]
 
@@ -26,8 +39,9 @@ def detect_topic(text):
 def harvest(environ=None, start_response=None):
     client = Client()
     client.login(BLUESKY_HANDLE, BLUESKY_PASSWORD)
-    es = Elasticsearch(ES_HOST, basic_auth=(ES_USER, ES_PASS), verify_certs=False)
+    r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASS or None, decode_responses=True)
     count = 0
+    skipped = 0
     errors = 0
     for kw in KEYWORDS:
         try:
@@ -39,9 +53,12 @@ def harvest(environ=None, start_response=None):
                     text = post.record.text
                     if not text.strip():
                         continue
+                    if r.sadd(DEDUP_KEY, post.uri) == 0:
+                        skipped += 1
+                        continue
                     doc = {
                         "id": post.uri,
-                        "platform": "bluesky",
+                        "platform": PLATFORM,
                         "text": text,
                         "author": post.author.handle,
                         "created_at": post.indexed_at,
@@ -53,7 +70,7 @@ def harvest(environ=None, start_response=None):
                         "url": "https://bsky.app/profile/" + post.author.handle,
                         "location": "Australia"
                     }
-                    es.index(index="social_posts", id="bluesky_" + post.uri.split("/")[-1], document=doc)
+                    r.lpush(QUEUE_KEY, json.dumps(doc, ensure_ascii=False))
                     count += 1
                 except Exception as e:
                     errors += 1
@@ -64,12 +81,9 @@ def harvest(environ=None, start_response=None):
             print("[BlueSky] 错误: " + str(e))
             time.sleep(15)
             continue
-    print("[BlueSky] 完成！成功: " + str(count) + " 条，错误: " + str(errors) + " 次")
+    print("[BlueSky] 完成！入队: " + str(count) + " 条，去重跳过: " + str(skipped) + " 条，错误: " + str(errors) + " 次")
     if start_response:
         start_response("200 OK", [("Content-Type", "text/plain")])
-        return [("bluesky done: " + str(count)).encode()]
+        
+    return "bluesky done: pushed=" + str(count) + " skipped=" + str(skipped) + " errors=" + str(errors)
 
-if __name__ == "__main__":
-    os.environ["BLUESKY_PASSWORD"] = "SET_YOUR_PASSWORD_HERE"
-    os.environ["ES_HOST"] = "https://localhost:9200"
-    harvest()
