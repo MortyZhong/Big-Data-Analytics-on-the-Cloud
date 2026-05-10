@@ -1,6 +1,8 @@
+# backend/harvesters/bluesky_harvester.py
 # Team: 68 | Name: Kuiyuan Shu | Student ID: 1345012
 
 from atproto import Client
+<<<<<<< HEAD
 import redis
 import json
 import time
@@ -25,6 +27,7 @@ QUEUE_KEY = "social_posts:queue"
 DEDUP_KEY = "social_posts:" + PLATFORM + ":seen_uris"
 
 KEYWORDS = ["Australia war", "Australia Iran", "tariff Australia", "oil Australia", "AusPol"]
+PAGES_PER_KEYWORD = 10
 
 def detect_topic(text):
     text = text.lower()
@@ -45,9 +48,13 @@ def harvest(environ=None, start_response=None):
     errors = 0
     for kw in KEYWORDS:
         try:
-            print("[BlueSky] 搜索: " + kw)
-            time.sleep(3)
-            result = client.app.bsky.feed.search_posts({"q": kw, "limit": 50})
+            print("[BlueSky] " + keyword + " 第" + str(page+1) + "页...")
+            params = {"q": keyword, "limit": 100}
+            if cursor:
+                params["cursor"] = cursor
+            result = client.app.bsky.feed.search_posts(params)
+            if not result.posts:
+                break
             for post in result.posts:
                 try:
                     text = post.record.text
@@ -72,12 +79,16 @@ def harvest(environ=None, start_response=None):
                     }
                     r.lpush(QUEUE_KEY, json.dumps(doc, ensure_ascii=False))
                     count += 1
+
                 except Exception as e:
-                    errors += 1
                     print("[BlueSky] 单条错误: " + str(e))
                     continue
+            if hasattr(result, "cursor") and result.cursor:
+                cursor = result.cursor
+            else:
+                break
+            time.sleep(3)
         except Exception as e:
-            errors += 1
             print("[BlueSky] 错误: " + str(e))
             time.sleep(15)
             continue
@@ -86,4 +97,3 @@ def harvest(environ=None, start_response=None):
         start_response("200 OK", [("Content-Type", "text/plain")])
         
     return "bluesky done: pushed=" + str(count) + " skipped=" + str(skipped) + " errors=" + str(errors)
-
