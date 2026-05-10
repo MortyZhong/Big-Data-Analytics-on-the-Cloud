@@ -10,8 +10,3 @@ fission fn create \
   --buildcmd "./build.sh"
   --secret harvester-secrets
 
-
-fission fn get --name bluesky-harvester -o yaml > fn.yaml
-
-
-kubectl apply -f fn.yaml
