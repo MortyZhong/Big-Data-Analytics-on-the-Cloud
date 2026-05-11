@@ -124,6 +124,9 @@ def harvest(environ=None, start_response=None):
                         text = post.record.text
                         if not text.strip():
                             continue
+                        langs = getattr(post.record, "langs", None) or []
+                        if langs and "en" not in langs:
+                            continue
                         if r.sadd(DEDUP_KEY, post.uri) == 0:
                             skipped += 1
                             continue
@@ -134,7 +137,7 @@ def harvest(environ=None, start_response=None):
                             "author": post.author.handle,
                             "created_at": post.indexed_at,
                             "topic": detect_topic(text),
-                            "language": "en",
+                            "language": (langs[0] if langs else "und"),
                             "tags": [],
                             "reblogs": getattr(post, "repost_count", 0),
                             "favourites": getattr(post, "like_count", 0),
