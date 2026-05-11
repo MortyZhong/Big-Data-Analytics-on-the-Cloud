@@ -1,6 +1,11 @@
-## Getting started
+## Only edit harvester, take bluesky for example
 
- zip bluesky_harvester.zip bluesky_harvester.py build.sh requirements.txt
+## After modifing each harvester
+zip bluesky_harvester.zip bluesky_harvester.py build.sh requirements.txt
+
+## Upload to fission, remember to delete the old function
+
+fission fn delete --name bluesky-harvester
 
 fission fn create \\\
   --name bluesky-harvester \\\
@@ -10,3 +15,9 @@ fission fn create \\\
   --buildcmd "./build.sh" \\\
   --secret harvester-secrets
 
+fission timetrigger create \\\
+  --name bluesky-5min \\\
+  --function bluesky-harvester \\\
+  --cron "@every 5m"
+
+## If free also to delete pkg unused
