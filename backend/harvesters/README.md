@@ -15,9 +15,9 @@ fission fn create \\\
   --buildcmd "./build.sh" \\\
   --secret harvester-secrets
 
-fission timetrigger create \
-  --name bluesky-5min \
-  --function bluesky-harvester \
+fission timetrigger create \\\
+  --name bluesky-5min \\\
+  --function bluesky-harvester \\\
   --cron "@every 5m"
 
 ## If free also to delete pkg unused
