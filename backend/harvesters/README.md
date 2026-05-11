@@ -15,6 +15,8 @@ fission fn create \\\
   --buildcmd "./build.sh" \\\
   --secret harvester-secrets
 
+fission fn test --name bluesky-harvester
+
 fission timetrigger create \\\
   --name bluesky-5min \\\
   --function bluesky-harvester \\\
