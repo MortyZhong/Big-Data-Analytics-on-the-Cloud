@@ -1,115 +1,197 @@
 # backend/harvesters/mastodon_harvester.py
 # Team: 68 | Name: Kuiyuan Shu | Student ID: 1345012
 
+import json
+import os
+import re
+import time
+from datetime import datetime, timedelta, timezone
+from urllib.parse import parse_qs
+
+import redis
 from mastodon import Mastodon
-from elasticsearch import Elasticsearch
-import re, time, os
 
-MASTODON_TOKEN = os.environ.get("MASTODON_TOKEN", "your_token_here")
+
+def read_secret(name):
+    secret_path = f"/secrets/default/harvester-secrets/{name}"
+    try:
+        with open(secret_path, "r") as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        return os.environ.get(name, "")
+
+
+MASTODON_TOKEN = read_secret("MASTODON_TOKEN")
 MASTODON_API_BASE = "https://mastodon.au"
-ES_HOST = os.environ.get("ES_HOST", "https://elasticsearch-es-http.elastic.svc.cluster.local:9200")
-ES_USER = os.environ.get("ES_USER", "elastic")
-ES_PASS = os.environ.get("ES_PASS", "elastic")
 
-TAGS = ["Australia", "AusPol", "war", "tariff", "oil", "Iran"]
-PAGES_PER_TAG = 5  # 每个tag翻5页，每页40条，共200条
+REDIS_HOST = "redis.redis.svc.cluster.local"
+REDIS_PORT = 6379
+REDIS_PASS = ""
+
+PLATFORM = "mastodon"
+QUEUE_KEY = "social_posts:queue"
+DEDUP_KEY = f"social_posts:{PLATFORM}:seen_ids"
+CURSOR_KEY = f"social_posts:{PLATFORM}:cursor"  # Redis hash: tag -> max_id
+
+DEFAULT_TAGS = ["Australia", "AusPol", "war", "tariff", "oil", "Iran"]
+DEFAULT_PAGES_PER_RUN = 1
+PAGE_LIMIT = 40  # Mastodon hashtag timeline cap
+MAX_AGE_DAYS = 90
+
 
 def clean_html(text):
-    return re.sub(r'<[^>]+>', '', text)
+    return re.sub(r"<[^>]+>", "", text)
+
 
 def detect_topic(text):
     text = text.lower()
     if any(w in text for w in ["war", "iran", "conflict", "military", "attack"]):
         return "war"
-    elif any(w in text for w in ["tariff", "trade", "sanction", "import", "export"]):
+    if any(w in text for w in ["tariff", "trade", "sanction", "import", "export"]):
         return "tariff"
-    elif any(w in text for w in ["oil", "fuel", "petrol", "energy", "gas"]):
+    if any(w in text for w in ["oil", "fuel", "petrol", "energy", "gas"]):
         return "oil"
     return "general"
 
-def harvest_tag(mastodon, es, tag):
-    count = 0
-    max_id = None
 
-    for page in range(PAGES_PER_TAG):
+def parse_params(environ):
+    tags, pages_per_run, reset = None, None, False
+
+    qs = parse_qs(environ.get("QUERY_STRING", "")) if environ else {}
+    if "tags" in qs:
+        tags = [t.strip() for t in qs["tags"][0].split(",") if t.strip()]
+    if "pages" in qs:
         try:
-            print(f"[Mastodon] #{tag} 第{page+1}页...")
+            pages_per_run = int(qs["pages"][0])
+        except ValueError:
+            pass
+    if qs.get("reset", ["0"])[0] in ("1", "true", "yes"):
+        reset = True
 
-            # 翻页：传入 max_id 拿下一页
-            if max_id:
-                statuses = mastodon.timeline_hashtag(tag, limit=40, max_id=max_id)
-            else:
-                statuses = mastodon.timeline_hashtag(tag, limit=40)
+    if environ and environ.get("REQUEST_METHOD") == "POST":
+        try:
+            length = int(environ.get("CONTENT_LENGTH") or 0)
+            if length > 0:
+                body = environ["wsgi.input"].read(length)
+                payload = json.loads(body)
+                if isinstance(payload.get("tags"), list):
+                    tags = [str(t).strip() for t in payload["tags"] if str(t).strip()]
+                if isinstance(payload.get("pages"), int):
+                    pages_per_run = payload["pages"]
+                if payload.get("reset"):
+                    reset = True
+        except Exception as e:
+            print(f"[Mastodon] body parse error: {e}")
 
-            if not statuses:
-                print(f"[Mastodon] #{tag} 没有更多数据了")
-                break
+    return (
+        tags or DEFAULT_TAGS,
+        pages_per_run or DEFAULT_PAGES_PER_RUN,
+        reset,
+    )
 
-            for s in statuses:
-                try:
-                    if s.get("language") != "en":
-                        continue
-                    text = clean_html(s["content"])
-                    if not text.strip():
-                        continue
 
-                    es.index(
-                        index="social_posts",
-                        id="mastodon_" + str(s["id"]),
-                        document={
-                            "id": str(s["id"]),
-                            "platform": "mastodon",
+def harvest(environ=None, start_response=None):
+    tags, pages_per_run, reset = parse_params(environ)
+
+    r = redis.Redis(
+        host=REDIS_HOST, port=REDIS_PORT,
+        password=REDIS_PASS or None, decode_responses=True,
+    )
+    if reset:
+        r.delete(CURSOR_KEY)
+        print("[Mastodon] cursor reset")
+
+    mastodon = Mastodon(access_token=MASTODON_TOKEN, api_base_url=MASTODON_API_BASE)
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=MAX_AGE_DAYS)
+
+    pushed = skipped = errors = 0
+
+    for tag in tags:
+        max_id = r.hget(CURSOR_KEY, tag) or None
+        finished = False
+        tag_pushed = tag_skipped = 0
+
+        for page in range(pages_per_run):
+            print(f"[Mastodon] #{tag} page {page + 1} cutoff={cutoff.isoformat()} (max_id={max_id})")
+            try:
+                kwargs = {"limit": PAGE_LIMIT}
+                if max_id:
+                    kwargs["max_id"] = max_id
+                statuses = mastodon.timeline_hashtag(tag, **kwargs)
+
+                if not statuses:
+                    finished = True
+                    break
+
+                hit_cutoff = False
+                for s in statuses:
+                    try:
+                        created = s["created_at"]
+                        if created.tzinfo is None:
+                            created = created.replace(tzinfo=timezone.utc)
+                        if created < cutoff:
+                            hit_cutoff = True
+                            break
+
+                        lang = s.get("language")
+                        if lang and lang != "en":
+                            continue
+                        text = clean_html(s["content"])
+                        if not text.strip():
+                            continue
+
+                        post_id = str(s["id"])
+                        if r.sadd(DEDUP_KEY, post_id) == 0:
+                            skipped += 1
+                            tag_skipped += 1
+                            continue
+
+                        doc = {
+                            "id": post_id,
+                            "platform": PLATFORM,
                             "text": text,
                             "author": s["account"]["acct"],
-                            "created_at": s["created_at"].isoformat(),
+                            "created_at": created.isoformat(),
                             "topic": detect_topic(text),
-                            "language": s.get("language", "en"),
+                            "language": lang or "und",
                             "tags": [t["name"] for t in s.get("tags", [])],
                             "reblogs": s.get("reblogs_count", 0),
                             "favourites": s.get("favourites_count", 0),
                             "url": s.get("url", ""),
-                            "location": "Australia"
+                            "location": "Australia",
                         }
-                    )
-                    count += 1
-                except Exception as e:
-                    print("[Mastodon] 单条错误: " + str(e))
-                    continue
+                        r.lpush(QUEUE_KEY, json.dumps(doc, ensure_ascii=False))
+                        pushed += 1
+                        tag_pushed += 1
+                    except Exception as e:
+                        errors += 1
+                        print(f"[Mastodon] post error: {e}")
+                        continue
 
-            # 拿最后一条的ID，用于下一页
-            max_id = statuses[-1]["id"]
+                max_id = str(statuses[-1]["id"])
 
-            # 反爬虫：每页之间等2秒
-            time.sleep(2)
+                if hit_cutoff:
+                    finished = True
+                    break
+                time.sleep(2)
 
-        except Exception as e:
-            print("[Mastodon] #" + tag + " 第" + str(page+1) + "页错误: " + str(e))
-            time.sleep(10)
-            break
+            except Exception as e:
+                errors += 1
+                print(f"[Mastodon] #{tag} page error: {e}")
+                time.sleep(5)
+                break
 
-    return count
+        if finished:
+            r.hdel(CURSOR_KEY, tag)
+        elif max_id:
+            r.hset(CURSOR_KEY, tag, max_id)
 
-def harvest(environ=None, start_response=None):
-    mastodon = Mastodon(
-        access_token=MASTODON_TOKEN,
-        api_base_url=MASTODON_API_BASE
-    )
-    es = Elasticsearch(ES_HOST, basic_auth=(ES_USER, ES_PASS), verify_certs=False)
+        print(f"[Mastodon] #{tag} -> pushed={tag_pushed} skipped={tag_skipped} finished={finished} next_max_id={max_id}")
 
-    total = 0
-    for tag in TAGS:
-        count = harvest_tag(mastodon, es, tag)
-        total += count
-        print("[Mastodon] #" + tag + " 完成: " + str(count) + " 条")
-        time.sleep(3)
-
-    print("[Mastodon] 全部完成！共 " + str(total) + " 条")
+    msg = f"mastodon done: pushed={pushed} skipped={skipped} errors={errors} tags={len(tags)} pages={pages_per_run}"
+    print(f"[Mastodon] {msg}")
 
     if start_response:
         start_response("200 OK", [("Content-Type", "text/plain")])
-        return [("mastodon done: " + str(total)).encode()]
-
-if __name__ == "__main__":
-    os.environ["MASTODON_TOKEN"] = "LdayWQTCWsDqcS8JBZG27v32ua-5p6xzUVoz57kd8_Q"
-    os.environ["ES_HOST"] = "https://localhost:9200"
-    harvest()
+    return msg
