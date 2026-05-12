@@ -102,6 +102,8 @@ vulnerability-scan:
 build-packages:
   stage: build
   script:
+    - echo "=== 安装 zip ==="
+    - apt-get update -qq && apt-get install -y zip --quiet
     - echo "=== 打包所有 harvester ==="
     - cd backend/harvesters
     - zip gdelt.zip gdelt_harvester.py build.sh requirements.txt
