@@ -81,7 +81,7 @@ response = get_topic_counts()
 
 ### Purpose
 
-Returns time-series topic trends grouped by week(It can be adjusted to "day" or "month" as needed.).
+Returns time-series topic trends grouped by week(It can be adjusted to "day" or "month" as needed)
 
 Used for:
 
