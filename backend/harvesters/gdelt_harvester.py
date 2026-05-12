@@ -23,6 +23,7 @@ CURSOR_KEY = f"social_posts:{PLATFORM}:cursor"
 DEFAULT_KEYWORDS = ["Australia war", "Australia Iran", "tariff Australia", "oil Australia", "AusPol"]
 MAX_AGE_DAYS = 90
 RATE_LIMIT_SLEEP = 10
+START_OFFSET_DAYS = 2   # GDELT 数据有延迟,从 2 天前开始回填
 
 
 def detect_topic(text):
@@ -75,13 +76,12 @@ def harvest(environ=None, start_response=None):
 
     today = datetime.now(timezone.utc).date()
     cutoff_date = today - timedelta(days=MAX_AGE_DAYS)
-    yesterday = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+    start_date = (today - timedelta(days=START_OFFSET_DAYS)).strftime("%Y-%m-%d")
 
-    # 没 cursor 的关键词从昨天开始(可能是首次跑,也可能是上一轮回填完了)
     for kw in keywords:
         if not r.hexists(CURSOR_KEY, kw):
-            r.hset(CURSOR_KEY, kw, yesterday)
-            print(f"[GDELT] init backfill for '{kw}' from {yesterday}")
+            r.hset(CURSOR_KEY, kw, start_date)
+            print(f"[GDELT] init backfill for '{kw}' from {start_date}")
 
     gd = GdeltDoc()
     pushed = skipped = errors = 0
@@ -90,7 +90,7 @@ def harvest(environ=None, start_response=None):
         cursor_date = r.hget(CURSOR_KEY, kw)
         kw_pushed = kw_skipped = 0
 
-        print(f"[GDELT] '{kw}' BACKFILL target={cursor_date} (rate-limit sleep {RATE_LIMIT_SLEEP}s)")
+        print(f"[GDELT] '{kw}' BACKFILL target={cursor_date} (sleep {RATE_LIMIT_SLEEP}s)")
         time.sleep(RATE_LIMIT_SLEEP)
 
         rate_limited = False
@@ -137,8 +137,11 @@ def harvest(environ=None, start_response=None):
             err_str = str(e).lower()
             if "limit" in err_str or "rate" in err_str or "one every" in err_str:
                 rate_limited = True
-                print(f"[GDELT] '{kw}' RATE LIMITED, cursor not advanced, will retry next run")
-                time.sleep(20)
+                print(f"[GDELT] '{kw}' RATE LIMITED, cursor not advanced")
+                time.sleep(15)
+            elif "invalid query end date" in err_str or "invalid query" in err_str:
+                # 日期超出 GDELT 范围(太新或太旧)→ 强制推进 cursor,避免卡死
+                print(f"[GDELT] '{kw}' INVALID DATE {cursor_date}, will advance cursor")
             else:
                 print(f"[GDELT] '{kw}' ERROR {type(e).__name__}: {e}")
                 time.sleep(5)
@@ -147,7 +150,7 @@ def harvest(environ=None, start_response=None):
             next_date = datetime.strptime(cursor_date, "%Y-%m-%d").date() - timedelta(days=1)
             if next_date < cutoff_date:
                 r.hdel(CURSOR_KEY, kw)
-                print(f"[GDELT] '{kw}' reached cutoff {cutoff_date}, will restart from yesterday next run")
+                print(f"[GDELT] '{kw}' reached cutoff {cutoff_date}, will restart next run")
             else:
                 r.hset(CURSOR_KEY, kw, next_date.strftime("%Y-%m-%d"))
 
