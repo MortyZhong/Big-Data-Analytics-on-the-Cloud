@@ -1,6 +1,5 @@
 # backend/harvesters/gdelt_harvester.py
 # Team: 68 | Name: Yutao Fan | Student ID: 1810828
-
 import json
 import time
 import urllib3
@@ -23,7 +22,7 @@ CURSOR_KEY = f"social_posts:{PLATFORM}:cursor"  # Redis hash: keyword -> backfil
 
 DEFAULT_KEYWORDS = ["Australia war", "Australia Iran", "tariff Australia", "oil Australia", "AusPol"]
 MAX_AGE_DAYS = 90
-RATE_LIMIT_SLEEP = 7  # GDELT API rate limit
+RATE_LIMIT_SLEEP = 10  # GDELT API rate limit (must >= 5s, 10s for safety)
 
 
 def detect_topic(text):
@@ -97,6 +96,7 @@ def harvest(environ=None, start_response=None):
         print(f"[GDELT] '{kw}' mode={mode} target={cursor_date or 'last 24h'} (rate-limit sleep {RATE_LIMIT_SLEEP}s)")
         time.sleep(RATE_LIMIT_SLEEP)
 
+        rate_limited = False  # 标记本次是否被限流
         try:
             if mode == "BACKFILL":
                 f = Filters(keyword=kw, start_date=cursor_date, end_date=cursor_date)
@@ -139,19 +139,25 @@ def harvest(environ=None, start_response=None):
             else:
                 print(f"[GDELT] '{kw}' no data returned")
 
-            # Advance backfill cursor one day earlier
-            if mode == "BACKFILL":
-                next_date = datetime.strptime(cursor_date, "%Y-%m-%d").date() - timedelta(days=1)
-                if next_date < cutoff_date:
-                    r.hdel(CURSOR_KEY, kw)
-                    print(f"[GDELT] '{kw}' reached cutoff {cutoff_date}, backfill finished")
-                else:
-                    r.hset(CURSOR_KEY, kw, next_date.strftime("%Y-%m-%d"))
-
         except Exception as e:
             errors += 1
-            print(f"[GDELT] '{kw}' ERROR {type(e).__name__}: {e}")
-            time.sleep(10)
+            err_str = str(e).lower()
+            if "limit" in err_str or "rate" in err_str or "one every" in err_str:
+                rate_limited = True
+                print(f"[GDELT] '{kw}' RATE LIMITED, cursor not advanced, will retry next run")
+                time.sleep(20)  # 限流时多睡 20s 退避
+            else:
+                print(f"[GDELT] '{kw}' ERROR {type(e).__name__}: {e}")
+                time.sleep(5)
+
+        # 仅在没有限流时推进 cursor(被限流的那天下次重试)
+        if mode == "BACKFILL" and not rate_limited:
+            next_date = datetime.strptime(cursor_date, "%Y-%m-%d").date() - timedelta(days=1)
+            if next_date < cutoff_date:
+                r.hdel(CURSOR_KEY, kw)
+                print(f"[GDELT] '{kw}' reached cutoff {cutoff_date}, backfill finished")
+            else:
+                r.hset(CURSOR_KEY, kw, next_date.strftime("%Y-%m-%d"))
 
         print(f"[GDELT] '{kw}' -> pushed={kw_pushed} skipped={kw_skipped} mode={mode}")
 
