@@ -51,7 +51,7 @@ unit-test:
   stage: test
   script:
     - echo "=== 安装依赖 ==="
-    - pip install pytest redis requests --quiet
+    - pip install pytest redis requests vaderSentiment --quiet
     - echo "=== 运行单元测试 ==="
     - |
       if [ -d "test" ] && [ "$(ls -A test)" ]; then
