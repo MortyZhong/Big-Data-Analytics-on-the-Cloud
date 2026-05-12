@@ -184,5 +184,3 @@ def harvest(environ=None, start_response=None):
         start_response("200 OK", [("Content-Type", "text/plain")])
     return msg
 
-if __name__ == "__main__":
-    harvest()
