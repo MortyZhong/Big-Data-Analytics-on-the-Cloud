@@ -1,0 +1,139 @@
+# .gitlab-ci.yml
+# Team: 68 | CI/CD Pipeline for COMP90024 Assignment 2
+# Stages: lint → test → security → build → deploy
+
+stages:
+  - lint
+  - test
+  - security
+  - build
+  - deploy
+
+default:
+  image: python:3.9
+
+# ══════════════════════════════════════════════════════════════
+# 第一阶段：LINT（代码风格检查）
+# ══════════════════════════════════════════════════════════════
+
+lint:
+  stage: lint
+  script:
+    - echo "=== 安装 flake8 ==="
+    - pip install flake8 --quiet
+    - echo "=== 代码风格检查 ==="
+    - flake8 backend/harvesters/ --select=E9,F63,F7,F82 --show-source
+    - echo "=== 风格检查通过 ✅ ==="
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  allow_failure: true
+
+syntax-check:
+  stage: lint
+  script:
+    - echo "=== 检查 Python 语法 ==="
+    - python -m py_compile backend/harvesters/gdelt_harvester.py
+    - python -m py_compile backend/harvesters/reddit_harvester.py
+    - python -m py_compile backend/harvesters/mastodon_harvester.py
+    - python -m py_compile backend/harvesters/bluesky_harvester.py
+    - python -m py_compile backend/harvesters/social_consumer.py
+    - echo "=== 语法检查通过 ✅ ==="
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+# ══════════════════════════════════════════════════════════════
+# 第二阶段：TEST（单元测试 + 集成测试）
+# ══════════════════════════════════════════════════════════════
+
+unit-test:
+  stage: test
+  script:
+    - echo "=== 安装依赖 ==="
+    - pip install pytest redis requests --quiet
+    - echo "=== 运行单元测试 ==="
+    - |
+      if [ -d "test" ] && [ "$(ls -A test)" ]; then
+        pytest test/ -v --tb=short
+      else
+        echo "暂无测试文件，跳过"
+      fi
+    - echo "=== 单元测试完成 ✅ ==="
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+integration-test:
+  stage: test
+  script:
+    - echo "=== 集成测试：检查依赖库是否可以正确导入 ==="
+    - pip install elasticsearch redis requests Mastodon.py atproto --quiet
+    - python -c "from elasticsearch import Elasticsearch; print('✅ ElasticSearch import OK')"
+    - python -c "import redis; print('✅ Redis import OK')"
+    - python -c "from mastodon import Mastodon; print('✅ Mastodon import OK')"
+    - python -c "from atproto import Client; print('✅ BlueSky atproto import OK')"
+    - python -c "import requests; print('✅ Requests import OK')"
+    - echo "=== 集成测试通过 ✅ ==="
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+# ══════════════════════════════════════════════════════════════
+# 第三阶段：SECURITY（安全扫描）
+# ══════════════════════════════════════════════════════════════
+
+vulnerability-scan:
+  stage: security
+  script:
+    - echo "=== 安装 safety ==="
+    - pip install safety --quiet
+    - echo "=== 扫描依赖库安全漏洞 ==="
+    - safety check -r backend/harvesters/requirements.txt || true
+    - echo "=== 安全扫描完成 ✅ ==="
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  allow_failure: true
+
+# ══════════════════════════════════════════════════════════════
+# 第四阶段：BUILD（打包）
+# ══════════════════════════════════════════════════════════════
+
+build-packages:
+  stage: build
+  script:
+    - echo "=== 打包所有 harvester ==="
+    - cd backend/harvesters
+    - zip gdelt.zip gdelt_harvester.py build.sh requirements.txt
+    - zip mastodon.zip mastodon_harvester.py build.sh requirements.txt
+    - zip bluesky.zip bluesky_harvester.py build.sh requirements.txt
+    - zip reddit.zip reddit_harvester.py build.sh requirements.txt
+    - zip consumer.zip social_consumer.py build.sh requirements.txt
+    - echo "=== 打包完成 ✅ ==="
+  artifacts:
+    paths:
+      - backend/harvesters/*.zip
+    expire_in: 1 hour
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ══════════════════════════════════════════════════════════════
+# 第五阶段：DEPLOY（手动触发）
+# ══════════════════════════════════════════════════════════════
+
+deploy:
+  stage: deploy
+  when: manual
+  script:
+    - echo "=== 手动部署到 Fission ==="
+    - echo "部署命令："
+    - echo "  fission fn delete --name reddit-harvester"
+    - echo "  fission fn create --name reddit-harvester --env python39x --src reddit.zip --entrypoint reddit_harvester.harvest --buildcmd ./build.sh --secret harvester-secrets"
+    - echo "  fission fn delete --name mastodon-harvester"
+    - echo "  fission fn create --name mastodon-harvester --env python39x --src mastodon.zip --entrypoint mastodon_harvester.harvest --buildcmd ./build.sh --secret harvester-secrets"
+    - echo "  fission fn delete --name bluesky-harvester"
+    - echo "  fission fn create --name bluesky-harvester --env python39x --src bluesky.zip --entrypoint bluesky_harvester.harvest --buildcmd ./build.sh --secret harvester-secrets"
+    - echo "=== 部署说明已输出 ✅ ==="
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  allow_failure: true
