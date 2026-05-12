@@ -1,2 +1,0 @@
-elasticsearch==9.0.5
-urllib3==2.2.3
