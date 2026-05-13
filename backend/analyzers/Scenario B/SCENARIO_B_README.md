@@ -1,4 +1,4 @@
-# Scenario B Analytics Backend
+# scenario_b Analytics Backend
 
 ## Overview
 
