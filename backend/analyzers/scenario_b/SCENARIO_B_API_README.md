@@ -28,7 +28,7 @@ Fission Functions
 ↓
 Fission Router
 ↓
-Jupyter Notebook / Frontend
+Jupyter Notebook 
 ```
 
 ---
