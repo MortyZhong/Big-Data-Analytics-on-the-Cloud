@@ -4,4 +4,5 @@ atproto==0.0.65
 gdeltdoc==1.5.0
 requests==2.31.0
 redis==5.0.1
+openpyxl==3.1.5
 

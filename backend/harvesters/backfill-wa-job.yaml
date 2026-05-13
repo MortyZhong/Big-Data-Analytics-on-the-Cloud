@@ -1,0 +1,26 @@
+  apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: fuel-backfill-wa
+  spec:
+    ttlSecondsAfterFinished: 600
+    backoffLimit: 0
+    template:
+      spec:
+        restartPolicy: Never
+        containers:
+        - name: backfill
+          image: python:3.11-slim
+          command: ["sh","-c"]
+          args:
+            - |
+              pip install --quiet redis openpyxl &&
+              python /scripts/fuel_backfill_wa.py
+          resources:
+            requests: { memory: "256Mi" }
+            limits:   { memory: "512Mi" }
+          volumeMounts:
+          - { name: scripts, mountPath: /scripts }
+        volumes:
+        - name: scripts
+          configMap: { name: fuel-backfill-scripts }
