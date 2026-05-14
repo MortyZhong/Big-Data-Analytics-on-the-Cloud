@@ -1,4 +1,4 @@
-````markdown
+
 # Scenario C Backend API Documentation
 
 ## Scenario Overview
