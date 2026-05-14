@@ -75,7 +75,7 @@ def run_vader_sentiment():
     processed = 0
     skipped = 0
     actions = []
-    max_docs = None
+    max_docs = 500
 
     for doc in helpers.scan(
         client=es,
