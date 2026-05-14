@@ -1,3 +1,9 @@
+# Team: 68
+# Name: Yueting Duan
+# Student ID: 1736334
+# File: scenario_c_daily_aggregator.py
+# Description: Daily aggregation of official fuel prices and oil-related social media sentiment.
+
 import os
 from collections import defaultdict
 from datetime import datetime, timezone

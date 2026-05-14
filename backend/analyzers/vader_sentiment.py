@@ -1,3 +1,9 @@
+# Team: 68
+# Name: Yueting Duan
+# Student ID: 1736334
+# File: vader_sentiment.py
+# Description: Batch VADER sentiment analysis for social_posts.
+
 import os
 import urllib3
 from elasticsearch import Elasticsearch, helpers
@@ -13,6 +19,7 @@ ELASTIC_USER = os.environ.get("ES_USER", "elastic")
 ELASTIC_PASSWORD = os.environ.get("ES_PASS", "elastic")
 
 INDEX_NAME = "social_posts"
+BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "50"))
 
 
 def get_es_client():
@@ -38,55 +45,49 @@ def build_query():
         "query": {
             "bool": {
                 "must": [
-                    {
-                        "exists": {
-                            "field": "text"
-                        }
-                    }
+                    {"exists": {"field": "text"}}
                 ],
                 "filter": [
-                    {
-                        "terms": {
-                            "platform": ["reddit", "bluesky", "mastodon"]
-                        }
-                    },
-                    {
-                        "terms": {
-                            "topic": ["war", "tariff", "oil"]
-                        }
-                    }
+                    {"terms": {"platform": ["reddit", "bluesky", "mastodon"]}},
+                    {"terms": {"topic": ["war", "tariff", "oil"]}}
                 ],
                 "must_not": [
-                    {
-                        "exists": {
-                            "field": "sentiment"
-                        }
-                    }
+                    {"exists": {"field": "sentiment"}}
                 ]
             }
-        }
+        },
+        "size": BATCH_SIZE,
+        "_source": ["text", "platform", "topic", "created_at"]
     }
+
+
 def run_vader_sentiment():
     es = get_es_client()
     analyzer = SentimentIntensityAnalyzer()
 
-    query = build_query()
-
-    processed = 0
-    skipped = 0
-    actions = []
-    max_docs = 50
-
-    for doc in helpers.scan(
-        client=es,
+    response = es.search(
         index=INDEX_NAME,
-        query=query,
-        scroll="5m",
-        size=500
-    ):
-        doc_id = doc["_id"]
-        source = doc["_source"]
+        body=build_query()
+    )
 
+    hits = response.get("hits", {}).get("hits", [])
+
+    if not hits:
+        result = {
+            "status": "success",
+            "processed": 0,
+            "skipped": 0,
+            "message": "No new documents need VADER sentiment analysis."
+        }
+        print(result)
+        return result
+
+    actions = []
+    skipped = 0
+
+    for hit in hits:
+        doc_id = hit["_id"]
+        source = hit.get("_source", {})
         text = source.get("text", "")
 
         if not isinstance(text, str) or not text.strip():
@@ -97,41 +98,31 @@ def run_vader_sentiment():
         compound = scores["compound"]
         label = classify_sentiment(compound)
 
-        action = {
-            "_op_type": "update",
-            "_index": INDEX_NAME,
-            "_id": doc_id,
-            "doc": {
-                "sentiment": compound,
-                "sentiment_score": compound,
-                "sentiment_label": label
+        actions.append(
+            {
+                "_op_type": "update",
+                "_index": INDEX_NAME,
+                "_id": doc_id,
+                "doc": {
+                    "sentiment": compound,
+                    "sentiment_score": compound,
+                    "sentiment_label": label
+                }
             }
-        }
-
-        actions.append(action)
-
-        if max_docs is not None and len(actions) >= max_docs:
-            break
-
-        if len(actions) >= 500:
-            helpers.bulk(es, actions)
-            processed += len(actions)
-            print(f"Processed {processed} documents...")
-            actions = []
+        )
 
     if actions:
         helpers.bulk(es, actions)
-        processed += len(actions)
 
-    print("VADER sentiment analysis finished.")
-    print(f"Processed: {processed}")
-    print(f"Skipped: {skipped}")
-
-    return {
+    result = {
         "status": "success",
-        "processed": processed,
-        "skipped": skipped
+        "processed": len(actions),
+        "skipped": skipped,
+        "batch_size": BATCH_SIZE
     }
+
+    print(result)
+    return result
 
 
 def main():
