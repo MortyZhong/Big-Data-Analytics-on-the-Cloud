@@ -1,84 +1,47 @@
+# Scenario C API Usage Guide
 
-# Scenario C Backend API Documentation
 
-## Scenario Overview
+# Scenario C — Fuel Price vs Social Media Sentiment API
 
-Scenario C explores the relationship between fuel prices and public sentiment on social media.
+## Scenario Goal
 
-Main research question:
+This scenario explores the relationship between Australian fuel prices and public sentiment on social media.
 
-> "When fuel prices rise, do Australians become more negative on social media?"
+Main question:
 
-The backend has already completed data aggregation and created a processed Elasticsearch index:
+> "When fuel prices rise, do social media sentiments become more negative?"
+
+The backend provides aggregated daily analytics data through a RESTful API.
+
+
+
+# Data Source
+
+The API reads from the Elasticsearch index:
 
 ```text
 scenario_c_daily
 ````
 
-This index contains daily aggregated analytics data combining:
+The index contains pre-aggregated daily records combining:
 
 * Official Australian fuel price data
-* Social media sentiment data related to oil/fuel discussions
+* Social media sentiment data related to oil/fuel topics
 
 ---
 
-# Current Dataset
+# API Endpoint
 
-The index currently contains:
-
-* 360 records total
-* 4 fuel types:
-
-  * diesel
-  * u91
-  * u95
-  * u98
-
-Each fuel type contains approximately 90 daily records.
-
----
-
-# Available Fields
-
-Each document in `scenario_c_daily` contains:
-
-| Field               | Description                          |
-| ------------------- | ------------------------------------ |
-| date                | Date of aggregation                  |
-| fuel_type           | Fuel category                        |
-| avg_fuel_price      | Average fuel price                   |
-| avg_sentiment_score | Average social media sentiment score |
-| negative_ratio      | Ratio of negative posts              |
-| oil_post_count      | Number of oil-related posts          |
-| negative_post_count | Number of negative oil-related posts |
-
----
-
-# Backend API Design
-
-Unlike Scenario B, Scenario C does NOT hardcode visualization logic inside the backend.
-
-The backend only provides:
-
-* Clean aggregated analytics data
-* Optional filtering
-* Standardized JSON output
-
-The frontend / Jupyter notebook is responsible for:
-
-* Choosing chart types
-* Comparing fuel types
-* Correlation analysis
-* Storytelling and visualization
-
-This design keeps the API flexible and RESTful.
-
----
-
-# Main API Endpoint
+## Main Endpoint
 
 ```text
 GET /api/scenario_c/fuel_sentiment_data
+```
+
+Example:
+
+```text
+http://localhost:8888/api/scenario_c/fuel_sentiment_data
 ```
 
 ---
@@ -93,18 +56,20 @@ Example:
 /api/scenario_c/fuel_sentiment_data?fuel_type=u91
 ```
 
-Supported fuel types:
+Supported values:
 
 * diesel
 * u91
 * u95
 * u98
 
-If no fuel_type is provided, the API returns data for ALL fuel types.
+If no `fuel_type` is provided, the API returns all fuel types.
 
 ---
 
-# Example JSON Response
+# Response Format
+
+Example response:
 
 ```json
 {
@@ -112,7 +77,7 @@ If no fuel_type is provided, the API returns data for ALL fuel types.
   "scenario": "scenario_c",
   "data": [
     {
-      "date": "2025-01-01",
+      "date": "2024-01-01",
       "fuel_type": "u91",
       "avg_fuel_price": 1.82,
       "avg_sentiment_score": -0.14,
@@ -126,117 +91,113 @@ If no fuel_type is provided, the API returns data for ALL fuel types.
 
 ---
 
-# Suggested Frontend Visualizations
+# Field Descriptions
 
-The frontend/Jupyter notebook may choose to build:
-
-## Overall Trend Analysis
-
-* Fuel price vs sentiment over time
-* Fuel price vs negative ratio
-* Dual-axis line charts
+| Field               | Description                                           |
+| ------------------- | ----------------------------------------------------- |
+| date                | Aggregated daily date                                 |
+| fuel_type           | Fuel category                                         |
+| avg_fuel_price      | Average daily fuel price                              |
+| avg_sentiment_score | Average sentiment score from oil-related social posts |
+| negative_ratio      | Ratio of negative posts                               |
+| oil_post_count      | Total number of oil-related posts                     |
+| negative_post_count | Number of negative oil-related posts                  |
 
 ---
 
-## Fuel Type Comparison
+# Recommended Frontend Visualizations
+
+The backend intentionally provides flexible aggregated data instead of hardcoded chart logic.
+
+Frontend/Jupyter visualization is responsible for deciding:
+
+* what metrics to compare
+* which charts to use
+* how to explore the data
+
+Recommended visualizations include:
+
+---
+
+## 1. Fuel Price vs Sentiment Trend
+
+Suggested chart:
+
+* Dual-axis line chart
+
+Possible dimensions:
+
+* avg_fuel_price
+* avg_sentiment_score
+* negative_ratio
+
+---
+
+## 2. Fuel Type Comparison
+
+Suggested chart:
+
+* Multi-line chart
 
 Compare:
 
-* diesel
 * u91
 * u95
 * u98
+* diesel
 
-Possible charts:
+Possible metrics:
 
-* Multi-line charts
-* Grouped trend charts
-* Correlation plots
-
----
-
-## Exploratory Analytics
-
-Possible analyses:
-
-* Does higher fuel price correlate with negative sentiment?
-* Which fuel type has the strongest sentiment response?
-* Which periods contain unusually negative discussions?
+* avg_fuel_price
+* avg_sentiment_score
+* negative_ratio
 
 ---
 
-# Backend Structure
+## 3. Correlation Analysis
 
-Recommended project structure:
+Suggested chart:
 
-```text
-backend/analyzers/scenario_c/
+* Scatter plot
 
-    analytics/
-        fuel_sentiment_data.py
+Possible analysis:
 
-    api/
-        fuel_sentiment_data_api.py
-```
+* fuel price vs sentiment score
+* fuel price vs negative ratio
 
 ---
 
-# Important Design Notes
+# Design Philosophy
 
-## Backend Responsibilities
+The backend exposes standardized analytics data through RESTful APIs.
 
-The backend is responsible for:
+Visualization and exploratory analysis are intentionally delegated to the frontend/Jupyter layer to support:
 
-* Elasticsearch querying
-* Data filtering
-* Returning standardized JSON
+* flexible storytelling
+* exploratory analytics
+* interactive dashboard design
 
-The backend should NOT:
+The API therefore focuses on:
 
-* Decide chart types
-* Hardcode comparison modes
-* Hardcode visualization logic
+* clean aggregated data
+* filtering support
+* consistent JSON structure
 
----
-
-## Frontend Responsibilities
-
-The frontend/Jupyter notebook is responsible for:
-
-* Data visualization
-* Comparative analysis
-* Interactive filtering
-* Dashboard storytelling
+rather than fixed visualization logic.
 
 ---
 
-# Deployment Notes
+# Notes for Frontend Developers
 
-Scenario C will be deployed through:
+* All data is already aggregated daily.
+* No additional backend aggregation is required.
+* Frontend can freely group/filter data.
+* Fuel type filtering can be done either:
 
-* Fission Functions
-* RESTful API endpoints
-* Kubernetes runtime
-
-The deployment workflow follows the same structure as Scenario B.
+  * in the API (`?fuel_type=u91`)
+  * or directly in frontend logic after loading all data.
 
 ---
-
-# GitLab Files
-
-Current aggregation script:
-
-```text
-backend/analyzers/scenario_c_daily_aggregator.py
-```
-
-Upcoming API files:
-
-```text
-backend/analyzers/scenario_c/analytics/fuel_sentiment_data.py
-
-backend/analyzers/scenario_c/api/fuel_sentiment_data_api.py
-```
 
 ```
 ```
