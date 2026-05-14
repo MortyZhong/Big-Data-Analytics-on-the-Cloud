@@ -5,7 +5,10 @@ from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-ELASTIC_URL = os.environ.get("ES_HOST", "https://localhost:9200")
+ELASTIC_URL = os.environ.get(
+    "ES_HOST",
+    "https://elasticsearch-es-http.elastic.svc.cluster.local:9200"
+)
 ELASTIC_USER = os.environ.get("ES_USER", "elastic")
 ELASTIC_PASSWORD = os.environ.get("ES_PASS", "elastic")
 
@@ -41,6 +44,18 @@ def build_query():
                         }
                     }
                 ],
+                "filter": [
+                    {
+                        "terms": {
+                            "platform": ["reddit", "bluesky", "mastodon"]
+                        }
+                    },
+                    {
+                        "terms": {
+                            "topic": ["war", "tariff", "oil"]
+                        }
+                    }
+                ],
                 "must_not": [
                     {
                         "exists": {
@@ -51,7 +66,6 @@ def build_query():
             }
         }
     }
-
 def run_vader_sentiment():
     es = get_es_client()
     analyzer = SentimentIntensityAnalyzer()
