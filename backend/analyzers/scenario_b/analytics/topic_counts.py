@@ -1,33 +1,34 @@
 # Team: 68 | Name: Yunxiao Gao | Student ID: 1718413
-# analytics/topic_counts.py
+#analytics/topic_counts.py
 from elasticsearch import Elasticsearch
 import urllib3
 import json
 
-# Disable SSL warnings
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# =========================
-# ElasticSearch Connection
-# =========================
-
-es = Elasticsearch(
-    "https://localhost:9200",
-    basic_auth=("elastic", "elastic"),
-    verify_certs=False
+urllib3.disable_warnings(
+    urllib3.exceptions.InsecureRequestWarning
 )
 
 INDEX_NAME = "social_posts"
 
 
-# =========================
-# Query Topic Counts
-# =========================
+def get_es_client():
+
+    print("CREATING ES CLIENT")
+
+    return Elasticsearch(
+        "https://elasticsearch-es-http.elastic:9200",
+        basic_auth=("elastic", "elastic"),
+        verify_certs=False
+    )
+
 
 def get_topic_counts():
-    """
-    Count how many posts belong to each topic.
-    """
+
+    print("START get_topic_counts")
+
+    es = get_es_client()
+
+    print("ES CLIENT CREATED")
 
     query = {
         "size": 0,
@@ -48,10 +49,14 @@ def get_topic_counts():
         }
     }
 
+    print("BEFORE SEARCH")
+
     response = es.search(
         index=INDEX_NAME,
         body=query
     )
+
+    print("AFTER SEARCH")
 
     buckets = response["aggregations"]["topics"]["buckets"]
 
@@ -63,7 +68,8 @@ def get_topic_counts():
             "count": bucket["doc_count"]
         })
 
-    #return results
+    print("RETURNING RESULT")
+
     return {
         "status": "success",
         "scenario": "scenario_b",
@@ -72,18 +78,14 @@ def get_topic_counts():
     }
 
 
-# =========================
-# Main
-# =========================
-
 if __name__ == "__main__":
 
     try:
-        topic_counts = get_topic_counts()
 
-        #print("\n=== Topic Counts ===\n")
+        topic_counts = get_topic_counts()
 
         print(json.dumps(topic_counts, indent=2))
 
     except Exception as e:
+
         print(f"Error: {e}")
