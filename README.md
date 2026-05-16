@@ -139,10 +139,10 @@ fission fn create \--name vader-sentiment \--env python39x \
 fission package create --name scenario-b-package \--env python39x \
   --sourcearchive build/scenario_b_api.zip
 fission function create --name $FUNCTION_NAME \--env python39x \
-    --pkgname scenario-b-package \
-    --entrypoint $ENTRYPOINT \
-    --executortype newdeploy \
-    --minscale 1
+  --pkgname scenario-b-package \
+  --entrypoint $ENTRYPOINT \
+  --executortype newdeploy \
+  --minscale 1
 
 fission package create --name scenario-c-api-package --env python39x \
   --sourcearchive build/scenario_c_api.zip
