@@ -4,11 +4,11 @@
 
 | Name | Student ID |
 |---|---|
-| Lixin Zhong | |
-| Yutao Fan | 1810828 |
-| Kuiyuan Shu | 1345012 |
-| Yueting Duan | |
-| (5th member) | |
+| Lixin Zhong |1728613 |
+| Yutao Fan  |1810828 |
+| Kuiyuan Shu |1345012 |
+| Yueting Duan |1736334 |
+| Yunxiao Gao |1718413 |
 
 **GitLab:** https://gitlab.unimelb.edu.au/lixinzhong/comp90024_team_68
 
@@ -145,7 +145,7 @@ fission fn create \
 fission fn test --name bluesky-harvester
 ```
 
-### Step 5: Set Up Scheduled Timers
+### Step 5: Set Up Scheduled Timers 需要去检查timer的时间不对/ 
 
 ```bash
 fission timer create --name mastodon-5min \
@@ -176,7 +176,7 @@ fission timer create --name scenario-c-daily-timer \
   --function scenario-c-daily-aggregator --cron "*/20 * * * *"
 ```
 
-### Step 6: Create RESTful API Routes
+### Step 6: Create RESTful API Routes 丹丹/萧子 需要去看一下 RESTful API 之后涛子帮忙
 
 ```bash
 fission route create --name scenario-a-sentiment-route \
