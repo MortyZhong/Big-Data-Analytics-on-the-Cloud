@@ -10,7 +10,7 @@
 | Yueting Duan |1736334 |
 | Yunxiao Gao |1718413 |
 
-**GitLab:** https://gitlab.unimelb.edu.au/lixinzhong/comp90024_team_68
+**GitLab:** https://gitlab.unimelb.edu.au/lixinzhong/comp90024_team_68 \
 **Demonstration video:**
 
 ---
