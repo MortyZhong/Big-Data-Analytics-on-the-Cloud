@@ -1,4 +1,3 @@
-# Team: 68 | Name: Yunxiao Gao | Student ID: 1718413
 # analytics/platform_topic_distribution.py
 
 from elasticsearch import Elasticsearch
@@ -6,25 +5,34 @@ import urllib3
 import json
 
 # Disable SSL warnings
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+urllib3.disable_warnings(
+    urllib3.exceptions.InsecureRequestWarning
+)
+
+INDEX_NAME = "social_posts"
+
 
 # =========================
 # ElasticSearch Connection
 # =========================
 
-es = Elasticsearch(
-    "https://localhost:9200",
-    basic_auth=("elastic", "elastic"),
-    verify_certs=False
-)
+def get_es_client():
 
-INDEX_NAME = "social_posts"
+    return Elasticsearch(
+        # "https://localhost:9200",  # local test
+        "https://elasticsearch-es-http.elastic:9200",
+        basic_auth=("elastic", "elastic"),
+        verify_certs=False
+    )
+
 
 # =========================
 # Query Platform Topic Distribution
 # =========================
 
 def get_topic_platform_distribution():
+
+    es = get_es_client()
 
     query = {
         "size": 0,
