@@ -144,7 +144,9 @@ fission fn create \
   --buildcmd "./build.sh" \
   --secret harvester-secrets
 
+# Test new function
 fission fn test --name bluesky-harvester
+fission fn log --name bluesky-harvester --follow
 ```
 
 ### Step 5: Set Up Scheduled Timers 
