@@ -53,7 +53,7 @@ fi
 fission timer create \
   --name vader-sentiment-timer \
   --function vader-sentiment \
-  --cron "@every 20m"
+  --cron "@every 10m"
 
 echo "Testing vader-sentiment function..."
 fission fn test --name vader-sentiment --timeout=5m
