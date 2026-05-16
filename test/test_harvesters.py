@@ -61,5 +61,5 @@ def test_gdelt_topic_detection():
     """测试GDELT话题检测"""
     from backend.harvesters.gdelt_harvester import detect_topic
     assert detect_topic("https://www.abc.net.au/news/oil-prices-rise", "190") == "oil"
-    assert detect_topic("https://www.abc.net.au/news/tariff-war-trade", "160") == "tariff"
+    assert detect_topic("https://www.abc.net.au/news/trade-sanctions-import", "160") == "tariff"
     assert detect_topic("https://www.abc.net.au/news/military-attack", "180") == "war"
