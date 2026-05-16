@@ -1,93 +1,385 @@
-# comp90024_team_68
+# COMP90024 - Cluster and Cloud Computing
+## Assignment 2: Big Data Analytics on the Cloud
+### Team 68
 
+| Name | Student ID |
+|---|---|
+| Lixin Zhong | |
+| Yutao Fan | 1810828 |
+| Kuiyuan Shu | 1345012 |
+| Yueting Duan | |
+| (5th member) | |
 
+**GitLab:** https://gitlab.unimelb.edu.au/lixinzhong/comp90024_team_68
 
-## Getting started
+---
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Project Overview
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+This project analyses Australian public opinion on three global crisis topics — **War**, **Tariff**, and **Oil** — by harvesting and analysing data from multiple social media platforms and official data sources deployed on the NeCTAR Research Cloud.
 
-## Add your files
+**Data Sources:**
+- Mastodon (`mastodon.au` — Australian server)
+- BlueSky (keywords: "Australia war", "tariff Australia", "oil Australia")
+- Reddit (`r/australia`, `r/AusPolitics`, `r/AusFinance`, `r/melbourne`)
+- GDELT (Global news CSV files, filtered for Australia-related events)
+- FuelWatch WA (Western Australian Government official fuel price data)
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+**Three Scenarios:**
+- **Scenario A:** Sentiment trends comparison across Mastodon, BlueSky, and Reddit on War/Tariff/Oil topics
+- **Scenario B:** Topic popularity and sentiment analysis using GDELT + social media platforms
+- **Scenario C:** Australian fuel prices (FuelWatch WA) vs social media sentiment on oil topics
+
+---
+
+## System Architecture
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.unimelb.edu.au/lixinzhong/comp90024_team_68.git
-git branch -M main
-git push -uf origin main
+Social Media APIs              K8s Cluster (NeCTAR Research Cloud)
+─────────────────             ──────────────────────────────────────────
+Mastodon     ──→              Fission Harvesters
+BlueSky      ──→                    ↓
+Reddit       ──→              Redis Queue
+GDELT CSV    ──→                    ↓
+FuelWatch WA ──→              social-consumer / fuel-consumer
+                                    ↓
+                              ElasticSearch
+                                    ↓
+                              RESTful API (Fission)
+                                    ↓
+                              Jupyter Notebook (Frontend)
 ```
 
-## Integrate with your tools
-
-* [Set up project integrations](https://gitlab.unimelb.edu.au/lixinzhong/comp90024_team_68/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+---
 
 ## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+> Note: The following assumes a Kubernetes cluster, Fission, ElasticSearch and Redis are already set up as per the workshop instructions.
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Step 1: Connect to the cluster
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```bash
+source unimelb-comp90024-2026-68-openrc.sh
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### Step 2: Create K8s Secrets
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+```bash
+# Harvester secrets (Mastodon token, BlueSky password, ES password)
+kubectl create secret generic harvester-secrets \
+  --from-literal=MASTODON_TOKEN=<your_mastodon_token> \
+  --from-literal=BLUESKY_PASSWORD=<your_bluesky_password> \
+  --from-literal=ES_PASS=<your_es_password> \
+  -n default
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+# Fuel secrets (FuelWatch WA / NSW API credentials)
+kubectl create secret generic fuel-secrets \
+  --from-literal=NSW_API_KEY=<your_nsw_api_key> \
+  --from-literal=NSW_API_SECRET=<your_nsw_api_secret> \
+  -n default
+```
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### Step 3: Deploy Fission Functions
 
-## License
-For open source projects, say how it is licensed.
+```bash
+cd backend/harvesters
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+# Package all harvesters
+zip harvester.zip mastodon_harvester.py bluesky_harvester.py \
+    reddit_harvester.py gdelt_harvester.py social_consumer.py \
+    fuel_harvester.py fuel_consumer.py build.sh requirements.txt
+
+fission package create --name harvester-pkg --env python39x \
+  --source harvester.zip --buildcmd "./build.sh"
+
+# Create functions
+fission fn create --name mastodon-harvester --env python39x \
+  --pkg harvester-pkg --entrypoint "mastodon_harvester.harvest" \
+  --secret harvester-secrets
+
+fission fn create --name bluesky-harvester --env python39x \
+  --pkg harvester-pkg --entrypoint "bluesky_harvester.harvest" \
+  --secret harvester-secrets
+
+fission fn create --name reddit-harvester --env python39x \
+  --pkg harvester-pkg --entrypoint "reddit_harvester.harvest" \
+  --secret harvester-secrets
+
+fission fn create --name gdelt-harvester --env python39x \
+  --pkg harvester-pkg --entrypoint "gdelt_harvester.harvest" \
+  --secret harvester-secrets
+
+fission fn create --name social-consumer --env python39x \
+  --pkg harvester-pkg --entrypoint "social_consumer.consume" \
+  --secret harvester-secrets
+
+fission fn create --name fuel-harvester --env python39x \
+  --pkg harvester-pkg --entrypoint "fuel_harvester.harvest" \
+  --secret fuel-secrets --secret harvester-secrets
+
+fission fn create --name fuel-consumer --env python39x \
+  --pkg harvester-pkg --entrypoint "fuel_consumer.consume" \
+  --secret harvester-secrets
+```
+
+### Step 4: Update an Existing Harvester
+
+To modify and redeploy a harvester (e.g. bluesky):
+
+```bash
+cd backend/harvesters
+
+# Repackage
+zip bluesky.zip bluesky_harvester.py build.sh requirements.txt
+
+# Delete old function and redeploy
+fission fn delete --name bluesky-harvester
+fission fn create \
+  --name bluesky-harvester \
+  --env python39x \
+  --src bluesky.zip \
+  --entrypoint "bluesky_harvester.harvest" \
+  --buildcmd "./build.sh" \
+  --secret harvester-secrets
+
+fission fn test --name bluesky-harvester
+```
+
+### Step 5: Set Up Scheduled Timers
+
+```bash
+fission timer create --name mastodon-5min \
+  --function mastodon-harvester --cron "@every 5m"
+
+fission timer create --name bluesky-5min \
+  --function bluesky-harvester --cron "@every 5m"
+
+fission timer create --name reddit-10min \
+  --function reddit-harvester --cron "*/10 * * * *"
+
+fission timer create --name gdelt-15min \
+  --function gdelt-harvester --cron "*/15 * * * *"
+
+fission timer create --name consumer-20min \
+  --function social-consumer --cron "@every 20m"
+
+fission timer create --name fuel-harvester-1day \
+  --function fuel-harvester --cron "0 22 * * *"
+
+fission timer create --name fuel-consumer-1h \
+  --function fuel-consumer --cron "@hourly"
+
+fission timer create --name vader-sentiment-timer \
+  --function vader-sentiment --cron "@every 10m"
+
+fission timer create --name scenario-c-daily-timer \
+  --function scenario-c-daily-aggregator --cron "*/20 * * * *"
+```
+
+### Step 6: Create RESTful API Routes
+
+```bash
+fission route create --name scenario-a-sentiment-route \
+  --method GET --url /api/scenario-a/sentiment \
+  --function scenario-a-sentiment-api
+
+fission route create --name topic-counts-route \
+  --method GET --url /api/scenario_b/topic_counts \
+  --function topic-counts-api
+
+fission route create --name topic-trends-route \
+  --method GET --url /api/scenario_b/topic_trends \
+  --function topic-trends-api
+
+fission route create --name topic-sentiment-route \
+  --method GET --url /api/scenario_b/topic_sentiment \
+  --function topic-sentiment-api
+
+fission route create --name topic-platform-distribution-route \
+  --method GET --url /api/scenario_b/topic_platform_distribution \
+  --function topic-platform-distribution-api
+
+fission route create --name scenario-c-fuel-sentiment-route \
+  --method GET --url /api/scenario_c/fuel_sentiment_data \
+  --function scenario-c-fuel-sentiment-api
+```
+
+---
+
+## How to Run the Application
+
+### Step 1: Connect to cluster services
+
+```bash
+# Connect to ElasticSearch
+kubectl port-forward service/elasticsearch-es-http -n elastic 9200:9200 &
+
+# Connect to Kibana (ES user interface)
+kubectl port-forward service/kibana-kb-http -n elastic 5601:5601 &
+
+# Connect to Fission Router (for API calls)
+kubectl port-forward svc/router -n fission 8888:80 &
+```
+
+### Step 2: Verify data collection
+
+```bash
+# Check total data count
+curl -k 'https://127.0.0.1:9200/social_posts/_count' \
+  --user 'elastic:elastic'
+
+# Check data by platform
+curl -k 'https://127.0.0.1:9200/social_posts/_search?pretty' \
+  --user 'elastic:elastic' \
+  -H 'Content-Type: application/json' \
+  -d '{"size":0,"aggs":{"by_platform":{"terms":{"field":"platform"}}}}'
+```
+
+### Step 3: Access the RESTful APIs
+
+```bash
+# Scenario A - Daily sentiment by platform and topic
+curl http://localhost:8888/api/scenario-a/sentiment
+
+# Scenario B - Topic post counts
+curl http://localhost:8888/api/scenario_b/topic_counts
+
+# Scenario B - Topic trends over time
+curl http://localhost:8888/api/scenario_b/topic_trends
+
+# Scenario B - Topic sentiment scores
+curl http://localhost:8888/api/scenario_b/topic_sentiment
+
+# Scenario B - Platform distribution per topic
+curl http://localhost:8888/api/scenario_b/topic_platform_distribution
+
+# Scenario C - Fuel price vs sentiment
+curl http://localhost:8888/api/scenario_c/fuel_sentiment_data
+
+# Scenario C - Filter by fuel type
+curl "http://localhost:8888/api/scenario_c/fuel_sentiment_data?fuel_type=u91"
+```
+
+### Step 4: Open Jupyter Notebook
+
+```bash
+# Ensure port-forward is running (Step 1)
+cd frontend/
+jupyter notebook
+```
+
+---
+
+## How to Test the System
+
+### Run Unit Tests
+
+```bash
+pip install pytest vaderSentiment requests redis
+pytest test/ -v
+```
+
+### Test Coverage (9 tests)
+
+| Test | What it tests |
+|---|---|
+| `test_detect_topic_war` | Reddit harvester correctly identifies war topic |
+| `test_detect_topic_tariff` | Reddit harvester correctly identifies tariff topic |
+| `test_detect_topic_oil` | Reddit harvester correctly identifies oil topic |
+| `test_detect_topic_general` | Unrelated content returns "general" |
+| `test_read_secret_fallback` | Secret reading falls back to env variables |
+| `test_vader_sentiment` | VADER correctly identifies positive sentiment |
+| `test_api_scenario_b_topic_counts` | Scenario B API returns HTTP 200 |
+| `test_api_scenario_a_sentiment` | Scenario A API returns HTTP 200 |
+| `test_gdelt_topic_detection` | GDELT harvester identifies topics from URLs |
+
+### CI/CD Pipeline
+
+All tests run automatically via GitLab CI/CD on every commit with stages: lint → test → build → deploy.
+
+---
+
+## Codebase Layout
+
+```
+comp90024_team_68/
+│
+├── README.md                          # This file
+├── .gitlab-ci.yml                     # CI/CD pipeline
+├── .gitignore
+│
+├── backend/
+│   ├── harvesters/                    # Data collection
+│   │   ├── README.md                  # Harvester deployment guide
+│   │   ├── mastodon_harvester.py      # Mastodon harvester
+│   │   ├── bluesky_harvester.py       # BlueSky harvester
+│   │   ├── reddit_harvester.py        # Reddit harvester
+│   │   ├── gdelt_harvester.py         # GDELT CSV harvester
+│   │   ├── gdelt_backfill.py          # GDELT historical backfill
+│   │   ├── fuel_harvester.py          # FuelWatch WA harvester
+│   │   ├── fuel_consumer.py           # Fuel data consumer
+│   │   ├── fuel_backfill_wa.py        # WA fuel historical data
+│   │   ├── fuel_backfill_nsw.py       # NSW fuel historical data
+│   │   ├── social_consumer.py         # Social posts consumer
+│   │   ├── build.sh                   # Fission build script
+│   │   └── requirements.txt
+│   │
+│   ├── analyzers/
+│   │   ├── vader_sentiment.py         # VADER sentiment analysis
+│   │   ├── scenario_a/                # Scenario A
+│   │   │   └── api/sentiment_api.py
+│   │   ├── scenario_b/                # Scenario B
+│   │   │   ├── analytics/             # Analytics functions
+│   │   │   └── api/                   # API endpoints
+│   │   └── scenario_c/                # Scenario C
+│   │       ├── scenario_c_daily_aggregator.py
+│   │       └── scenario_c_fuel_sentiment_api.py
+│   │
+│   └── deploy/                        # Deployment scripts
+│
+├── frontend/                          # Jupyter Notebook visualisations
+│
+├── database/
+│   ├── README.md                      # ES connection guide
+│   └── mappings/
+│       ├── social_posts_mapping.json
+│       ├── official_data_mapping.json
+│       └── gdelt_news_mapping.json
+│
+├── test/
+│   └── test_harvesters.py             # Unit and API tests
+│
+├── data/                              # Static data files
+├── docs/                              # Report PDF
+└── llm/                               # LLM usage documentation
+```
+
+---
+
+## ElasticSearch Indices
+
+| Index | Description |
+|---|---|
+| `social_posts` | Social media posts from all platforms (growing) |
+| `official_data` | FuelWatch WA fuel price data |
+| `scenario_c_daily` | Pre-aggregated daily fuel + sentiment data |
+
+## Fission Functions Summary
+
+| Function | Executor | Schedule | Purpose |
+|---|---|---|---|
+| mastodon-harvester | poolmgr | every 5min | Harvest Mastodon posts |
+| bluesky-harvester | poolmgr | every 5min | Harvest BlueSky posts |
+| reddit-harvester | poolmgr | every 10min | Harvest Reddit posts |
+| gdelt-harvester | poolmgr | every 15min | Harvest GDELT CSV |
+| social-consumer | poolmgr | every 20min | Redis → ES |
+| vader-sentiment | poolmgr | every 10min | VADER analysis |
+| fuel-harvester | poolmgr | daily 22:00 | FuelWatch WA prices |
+| fuel-consumer | poolmgr | hourly | Fuel Redis → ES |
+| scenario-c-daily-aggregator | newdeploy | every 20min | Aggregate Scenario C |
+| scenario-a-sentiment-api | newdeploy | on demand | Scenario A API |
+| topic-counts-api | newdeploy | on demand | Scenario B API |
+| topic-trends-api | newdeploy | on demand | Scenario B API |
+| topic-sentiment-api | newdeploy | on demand | Scenario B API |
+| topic-platform-distribution-api | newdeploy | on demand | Scenario B API |
+| scenario-c-fuel-sentiment-api | newdeploy | on demand | Scenario C API |
