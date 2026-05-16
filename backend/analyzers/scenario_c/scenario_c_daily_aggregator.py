@@ -81,7 +81,14 @@ def create_output_index(es):
 
 def load_official_fuel_prices(es):
     """
-    Load official fuel prices from official_data and aggregate by location, date and fuel type.
+    Load daily official fuel prices from official_data.
+
+    official_data is already stored at the daily level:
+    date + location + fuel_type -> price
+
+    Therefore, this function does not calculate another daily average.
+    It only reorganises the data into:
+    fuel_daily[location][fuel_type][day] = price
     """
     query = {
         "query": {
@@ -96,9 +103,8 @@ def load_official_fuel_prices(es):
         }
     }
 
-    prices_by_location_type_and_day = defaultdict(
-        lambda: defaultdict(lambda: defaultdict(list))
-    )
+    fuel_daily = defaultdict(lambda: defaultdict(dict))
+    duplicate_count = 0
 
     for doc in helpers.scan(
         client=es,
@@ -118,17 +124,14 @@ def load_official_fuel_prices(es):
             continue
 
         try:
-            prices_by_location_type_and_day[location][fuel_type][day].append(float(price))
+            price = float(price)
         except Exception:
             continue
 
-    fuel_daily = defaultdict(lambda: defaultdict(dict))
+        if day in fuel_daily[location][fuel_type]:
+            duplicate_count += 1
 
-    for location, type_prices in prices_by_location_type_and_day.items():
-        for fuel_type, day_prices in type_prices.items():
-            for day, prices in day_prices.items():
-                if prices:
-                    fuel_daily[location][fuel_type][day] = sum(prices) / len(prices)
+        fuel_daily[location][fuel_type][day] = price
 
     for location in LOCATIONS:
         for fuel_type in FUEL_TYPES:
@@ -136,6 +139,8 @@ def load_official_fuel_prices(es):
                 f"Official fuel days loaded for {location} {fuel_type}: "
                 f"{len(fuel_daily[location][fuel_type])}"
             )
+
+    print(f"Duplicate daily fuel records overwritten: {duplicate_count}")
 
     return fuel_daily
 
@@ -280,6 +285,11 @@ def main():
 
     print("Scenario C daily aggregation finished.")
 
+    return {
+        "status": "success",
+        "message": "Scenario C daily aggregation finished.",
+        "records_written": len(records)
+    }
 
 if __name__ == "__main__":
     main()
