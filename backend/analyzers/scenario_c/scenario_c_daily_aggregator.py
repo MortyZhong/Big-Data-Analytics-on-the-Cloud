@@ -13,7 +13,8 @@ from elasticsearch import Elasticsearch, helpers
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-ELASTIC_URL = os.environ.get("ES_HOST", "https://localhost:9200")
+ELASTIC_URL = os.environ.get("ES_HOST", "https://elasticsearch-es-http.elastic.svc.cluster.local:9200")
+#ELASTIC_URL = os.environ.get("ES_HOST", "https://localhost:9200")# local test
 ELASTIC_USER = os.environ.get("ES_USER", "elastic")
 ELASTIC_PASSWORD = os.environ.get("ES_PASS", "elastic")
 
