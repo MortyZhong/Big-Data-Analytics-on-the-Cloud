@@ -227,7 +227,7 @@ fission timer create --name scenario-c-daily-timer \
   --function scenario-c-daily-aggregator --cron "*/20 * * * *"
 ```
 
-### Step 6: Create RESTful API Routes 丹丹/萧子 需要去看一下 RESTful API 之后涛子帮忙
+### Step 6: Create RESTful API Routes 
 
 ```bash
 fission route create --name scenario-a-sentiment-route \
@@ -286,7 +286,7 @@ curl -k 'https://127.0.0.1:9200/social_posts/_search?pretty' \
   -d '{"size":0,"aggs":{"by_platform":{"terms":{"field":"platform"}}}}'
 ```
 
-### Step 3: Access the RESTful APIs   丹丹/萧子
+### Step 3: Access the RESTful APIs  
 
 ```bash
 # Scenario A - Daily sentiment by platform and topic
@@ -433,7 +433,7 @@ comp90024_team_68/
 | `official_data` | FuelWatch WA fuel price data |
 | `scenario_c_daily` | Pre-aggregated daily fuel + sentiment data |
 
-## Fission Functions Summary 对了
+## Fission Functions Summary 
 
 | Function | Executor | Schedule | Purpose |
 |---|---|---|---|
