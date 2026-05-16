@@ -22,7 +22,7 @@ SOCIAL_INDEX = "social_posts"
 OUTPUT_INDEX = "scenario_c_daily"
 
 FUEL_TYPES = ["u91", "u95", "u98", "diesel"]
-LOCATION = "WA"
+LOCATIONS = ["WA", "NSW"]
 
 
 def get_es_client():
@@ -81,14 +81,14 @@ def create_output_index(es):
 
 def load_official_fuel_prices(es):
     """
-    Load official WA fuel prices from official_data and aggregate by date and fuel type.
+    Load official fuel prices from official_data and aggregate by location, date and fuel type.
     """
     query = {
         "query": {
             "bool": {
                 "filter": [
                     {"terms": {"type": FUEL_TYPES}},
-                    {"term": {"location": LOCATION}},
+                    {"terms": {"location": LOCATIONS}},
                     {"exists": {"field": "price"}},
                     {"exists": {"field": "date"}},
                 ]
@@ -96,7 +96,9 @@ def load_official_fuel_prices(es):
         }
     }
 
-    prices_by_type_and_day = defaultdict(lambda: defaultdict(list))
+    prices_by_location_type_and_day = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(list))
+    )
 
     for doc in helpers.scan(
         client=es,
@@ -107,27 +109,33 @@ def load_official_fuel_prices(es):
     ):
         source = doc["_source"]
 
+        location = source.get("location")
         fuel_type = source.get("type")
         day = parse_date_to_day(source.get("date"))
         price = source.get("price")
 
-        if fuel_type not in FUEL_TYPES or day is None or price is None:
+        if location not in LOCATIONS or fuel_type not in FUEL_TYPES or day is None or price is None:
             continue
 
         try:
-            prices_by_type_and_day[fuel_type][day].append(float(price))
+            prices_by_location_type_and_day[location][fuel_type][day].append(float(price))
         except Exception:
             continue
 
-    fuel_daily = defaultdict(dict)
+    fuel_daily = defaultdict(lambda: defaultdict(dict))
 
-    for fuel_type, day_prices in prices_by_type_and_day.items():
-        for day, prices in day_prices.items():
-            if prices:
-                fuel_daily[fuel_type][day] = sum(prices) / len(prices)
+    for location, type_prices in prices_by_location_type_and_day.items():
+        for fuel_type, day_prices in type_prices.items():
+            for day, prices in day_prices.items():
+                if prices:
+                    fuel_daily[location][fuel_type][day] = sum(prices) / len(prices)
 
-    for fuel_type in FUEL_TYPES:
-        print(f"Official fuel days loaded for {fuel_type}: {len(fuel_daily[fuel_type])}")
+    for location in LOCATIONS:
+        for fuel_type in FUEL_TYPES:
+            print(
+                f"Official fuel days loaded for {location} {fuel_type}: "
+                f"{len(fuel_daily[location][fuel_type])}"
+            )
 
     return fuel_daily
 
@@ -205,42 +213,44 @@ def load_social_oil_sentiment(es):
 def build_daily_records(fuel_daily, social_daily):
     """
     Merge fuel prices and social sentiment on common dates.
-    One record per date and fuel type.
+    One record per date, location and fuel type.
     """
     records = []
 
-    for fuel_type in FUEL_TYPES:
-        common_days = sorted(set(fuel_daily[fuel_type].keys()) & set(social_daily.keys()))
+    for location in LOCATIONS:
+        for fuel_type in FUEL_TYPES:
+            common_days = sorted(
+                set(fuel_daily[location][fuel_type].keys()) & set(social_daily.keys())
+            )
 
-        print(f"Common days for {fuel_type}: {len(common_days)}")
+            print(f"Common days for {location} {fuel_type}: {len(common_days)}")
 
-        for day in common_days:
-            social = social_daily[day]
+            for day in common_days:
+                social = social_daily[day]
 
-            record = {
-                "date": day,
-                "fuel_type": fuel_type,
-                "location": LOCATION,
-                "avg_fuel_price": fuel_daily[fuel_type][day],
-                "avg_sentiment_score": social["avg_sentiment_score"],
-                "negative_ratio": social["negative_ratio"],
-                "oil_post_count": social["oil_post_count"],
-                "negative_post_count": social["negative_post_count"],
-                "source": "FuelWatch WA + social_posts",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
+                record = {
+                    "date": day,
+                    "fuel_type": fuel_type,
+                    "location": location,
+                    "avg_fuel_price": fuel_daily[location][fuel_type][day],
+                    "avg_sentiment_score": social["avg_sentiment_score"],
+                    "negative_ratio": social["negative_ratio"],
+                    "oil_post_count": social["oil_post_count"],
+                    "negative_post_count": social["negative_post_count"],
+                    "source": "official_data + social_posts",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                }
 
-            records.append(record)
+                records.append(record)
 
     print(f"Total records written: {len(records)}")
     return records
-
 
 def write_records(es, records):
     actions = []
 
     for record in records:
-        doc_id = f"{record['date']}_{record['fuel_type']}_{record['location']}"
+        doc_id = f"{record['date']}_{record['location']}_{record['fuel_type']}"
 
         actions.append(
             {
