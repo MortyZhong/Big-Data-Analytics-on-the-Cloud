@@ -24,6 +24,7 @@ This project analyses Australian public opinion on three global crisis topics �
 - Reddit (`r/australia`, `r/AusPolitics`, `r/AusFinance`, `r/melbourne`)
 - GDELT (Global news CSV files, filtered for Australia-related events)
 - FuelWatch WA (Western Australian Government official fuel price data)
+- NSW Fuel Check (New South Wales Government official fuel price data)
 
 **Three Scenarios:** 萧/丹
 - **Scenario A:** Sentiment trends comparison across Mastodon, BlueSky, and Reddit on War/Tariff/Oil topics
@@ -37,17 +38,17 @@ This project analyses Australian public opinion on three global crisis topics �
 ```
 Social Media APIs              K8s Cluster (NeCTAR Research Cloud)
 ─────────────────             ──────────────────────────────────────────
-Mastodon     ──→              Fission Harvesters
-BlueSky      ──→                    ↓
-Reddit       ──→              Redis Queue
-GDELT CSV    ──→                    ↓
-FuelWatch WA ──→              social-consumer / fuel-consumer
-                                    ↓
-                              ElasticSearch
-                                    ↓
-                              RESTful API (Fission)
-                                    ↓
-                              Jupyter Notebook (Frontend)
+Mastodon       ──→              Fission Harvesters
+BlueSky        ──→                    ↓
+Reddit         ──→              Redis Queue
+GDELT CSV      ──→                    ↓
+FuelWatch WA   ──→              social-consumer / fuel-consumer
+NSW Fuel Check ──→                    ↓
+                                ElasticSearch
+                                      ↓
+                                RESTful API (Fission)
+                                      ↓
+                                Jupyter Notebook (Frontend)
 ```
 
 ---
