@@ -124,43 +124,43 @@ fission fn create --name fuel-consumer --env python39x \
   --secret harvester-secrets
 
 fission fn create --name scenario-a-sentiment-api --env python39x \
-    --src build/scenario_a_sentiment_api.zip \
-    --entrypoint "sentiment_api.main" \
-    --executortype newdeploy \
-    --fntimeout 60
+  --src build/scenario_a_sentiment_api.zip \
+  --entrypoint "sentiment_api.main" \
+  --executortype newdeploy \
+  --fntimeout 60
 
 fission fn create \--name vader-sentiment \--env python39x \
-    --src build/vader_sentiment.zip \
-    --entrypoint "vader_sentiment.main" \
-    --secret harvester-secrets \
-    --executortype poolmgr \
-    --fntimeout 300
+  --src build/vader_sentiment.zip \
+  --entrypoint "vader_sentiment.main" \
+  --secret harvester-secrets \
+  --executortype poolmgr \
+  --fntimeout 300
 
 fission package create --name scenario-b-package \--env python39x \
-    --sourcearchive build/scenario_b_api.zip
+  --sourcearchive build/scenario_b_api.zip
 fission function create --name $FUNCTION_NAME \--env python39x \
-      --pkgname scenario-b-package \
-      --entrypoint $ENTRYPOINT \
-      --executortype newdeploy \
-      --minscale 1
+    --pkgname scenario-b-package \
+    --entrypoint $ENTRYPOINT \
+    --executortype newdeploy \
+    --minscale 1
 
 fission package create --name scenario-c-api-package --env python39x \
-    --sourcearchive build/scenario_c_api.zip
+  --sourcearchive build/scenario_c_api.zip
 fission function create --name scenario-c-fuel-sentiment-api --env python39x \
-    --pkgname scenario-c-api-package\ 
-    --entrypoint "scenario_c_fuel_sentiment_api.main" \
-    --executortype newdeploy \
-    --minscale 1 \
-    --fntimeout 60
+  --pkgname scenario-c-api-package\ 
+  --entrypoint "scenario_c_fuel_sentiment_api.main" \
+  --executortype newdeploy \
+  --minscale 1 \
+  --fntimeout 60
 
 fission package create --name scenario-c-aggregator-package --env python39x \
-    --sourcearchive build/scenario_c_aggregator.zip
+  --sourcearchive build/scenario_c_aggregator.zip
 fission function create --name scenario-c-daily-aggregator --env python39x \
-    --pkgname scenario-c-aggregator-package \
-    --entrypoint "scenario_c_daily_aggregator.main" \
-    --executortype newdeploy \
-    --minscale 1 \
-    --fntimeout 300
+  --pkgname scenario-c-aggregator-package \
+  --entrypoint "scenario_c_daily_aggregator.main" \
+  --executortype newdeploy \
+  --minscale 1 \
+  --fntimeout 300
 ```
 
 ### Step 4: Update an Existing Harvester
