@@ -1,6 +1,6 @@
+# Team: 68 | Name: Yunxiao Gao | Student ID: 1718413
 # File: deploy_scenario_b_api.sh
-# Description:
-# Deploy Scenario B APIs to Fission
+# Description:Deploy Scenario B APIs to Fission
 
 set -e
 
@@ -147,7 +147,7 @@ fission fn test --name topic-counts-api
 fission fn test --name topic-trends-api
 fission fn test --name topic-sentiment-api
 fission fn test --name topic-platform-distribution-api
-fission fn test --name posts-query-api
+#fission fn test --name posts-query-api
 
 # Done
 echo "Scenario B deployment complete!"
