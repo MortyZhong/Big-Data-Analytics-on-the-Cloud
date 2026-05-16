@@ -235,7 +235,7 @@ curl -k 'https://127.0.0.1:9200/social_posts/_search?pretty' \
   -d '{"size":0,"aggs":{"by_platform":{"terms":{"field":"platform"}}}}'
 ```
 
-### Step 3: Access the RESTful APIs
+### Step 3: Access the RESTful APIs   丹丹/萧子
 
 ```bash
 # Scenario A - Daily sentiment by platform and topic
@@ -260,7 +260,7 @@ curl http://localhost:8888/api/scenario_c/fuel_sentiment_data
 curl "http://localhost:8888/api/scenario_c/fuel_sentiment_data?fuel_type=u91"
 ```
 
-### Step 4: Open Jupyter Notebook
+### Step 4: Open Jupyter Notebook 涛子
 
 ```bash
 # Ensure port-forward is running (Step 1)
@@ -270,7 +270,7 @@ jupyter notebook
 
 ---
 
-## How to Test the System
+## How to Test the System 元子来做/ 舒（shu）
 
 ### Run Unit Tests
 
@@ -356,7 +356,7 @@ comp90024_team_68/
 
 ---
 
-## ElasticSearch Indices
+## ElasticSearch Indices 
 
 | Index | Description |
 |---|---|
@@ -364,7 +364,7 @@ comp90024_team_68/
 | `official_data` | FuelWatch WA fuel price data |
 | `scenario_c_daily` | Pre-aggregated daily fuel + sentiment data |
 
-## Fission Functions Summary
+## Fission Functions Summary 必须得改，元元来改/
 
 | Function | Executor | Schedule | Purpose |
 |---|---|---|---|
