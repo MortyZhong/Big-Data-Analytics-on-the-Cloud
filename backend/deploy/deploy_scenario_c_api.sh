@@ -2,6 +2,7 @@
 # Team: 68 | Name: Yunxiao Gao | Student ID: 1718413
 # File: deploy_scenario_c_api.sh
 # Description:Deploy Scenario C RESTful API to Fission
+# How to run: ./deploy_scenario_c_api.sh
 
 set -e
 
