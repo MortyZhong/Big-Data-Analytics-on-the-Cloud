@@ -145,7 +145,7 @@ fission fn create \
 fission fn test --name bluesky-harvester
 ```
 
-### Step 5: Set Up Scheduled Timers 需要去检查timer的时间不对/ 
+### Step 5: Set Up Scheduled Timers 
 
 ```bash
 fission timer create --name mastodon-5min \
@@ -270,7 +270,7 @@ jupyter notebook
 
 ---
 
-## How to Test the System 元子来做/ 舒（shu）
+## How to Test the System 
 
 ### Run Unit Tests
 
@@ -364,7 +364,7 @@ comp90024_team_68/
 | `official_data` | FuelWatch WA fuel price data |
 | `scenario_c_daily` | Pre-aggregated daily fuel + sentiment data |
 
-## Fission Functions Summary 必须得改，元元来改/
+## Fission Functions Summary 对了
 
 | Function | Executor | Schedule | Purpose |
 |---|---|---|---|
