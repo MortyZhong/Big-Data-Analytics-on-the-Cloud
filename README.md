@@ -123,12 +123,16 @@ fission fn create --name fuel-consumer --env python39x \
   --pkg harvester-pkg --entrypoint "fuel_consumer.consume" \
   --secret harvester-secrets
 
+cd backend/analyzers/scenario_a
+
+# Scenario A sentiment API
 fission fn create --name scenario-a-sentiment-api --env python39x \
   --src build/scenario_a_sentiment_api.zip \
   --entrypoint "sentiment_api.main" \
   --executortype newdeploy \
   --fntimeout 60
 
+# VADER sentiment analysis function
 fission fn create \--name vader-sentiment \--env python39x \
   --src build/vader_sentiment.zip \
   --entrypoint "vader_sentiment.main" \
@@ -136,6 +140,7 @@ fission fn create \--name vader-sentiment \--env python39x \
   --executortype poolmgr \
   --fntimeout 300
 
+# Scenario B APIs
 fission package create --name scenario-b-package \--env python39x \
   --sourcearchive build/scenario_b_api.zip
 fission function create --name $FUNCTION_NAME \--env python39x \
@@ -144,6 +149,8 @@ fission function create --name $FUNCTION_NAME \--env python39x \
   --executortype newdeploy \
   --minscale 1
 
+
+# Scenario C API
 fission package create --name scenario-c-api-package --env python39x \
   --sourcearchive build/scenario_c_api.zip
 fission function create --name scenario-c-fuel-sentiment-api --env python39x \
@@ -153,6 +160,7 @@ fission function create --name scenario-c-fuel-sentiment-api --env python39x \
   --minscale 1 \
   --fntimeout 60
 
+# Scenario C daily aggregator
 fission package create --name scenario-c-aggregator-package --env python39x \
   --sourcearchive build/scenario_c_aggregator.zip
 fission function create --name scenario-c-daily-aggregator --env python39x \
