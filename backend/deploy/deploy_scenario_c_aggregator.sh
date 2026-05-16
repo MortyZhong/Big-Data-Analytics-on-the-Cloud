@@ -1,6 +1,7 @@
 #!/bin/bash
 # Team: 68 | Name: Yunxiao Gao | Student ID: 1718413
 # Description:Deploy Scenario C aggregation pipeline to Fission
+# How to run: ./deploy_scenario_c_api.sh
 
 set -e
 
