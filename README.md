@@ -305,54 +305,72 @@ All tests run automatically via GitLab CI/CD on every commit with stages: lint �
 ```
 comp90024_team_68/
 │
-├── README.md                          # This file
-├── .gitlab-ci.yml                     # CI/CD pipeline
+├── README.md                                        # This file
+├── .gitlab-ci.yml                                   # CI/CD pipeline
 ├── .gitignore
 │
 ├── backend/
-│   ├── harvesters/                    # Data collection
-│   │   ├── README.md                  # Harvester deployment guide
-│   │   ├── mastodon_harvester.py      # Mastodon harvester
-│   │   ├── bluesky_harvester.py       # BlueSky harvester
-│   │   ├── reddit_harvester.py        # Reddit harvester
-│   │   ├── gdelt_harvester.py         # GDELT CSV harvester
-│   │   ├── gdelt_backfill.py          # GDELT historical backfill
-│   │   ├── fuel_harvester.py          # FuelWatch WA harvester
-│   │   ├── fuel_consumer.py           # Fuel data consumer
-│   │   ├── fuel_backfill_wa.py        # WA fuel historical data
-│   │   ├── fuel_backfill_nsw.py       # NSW fuel historical data
-│   │   ├── social_consumer.py         # Social posts consumer
-│   │   ├── build.sh                   # Fission build script
+│   ├── harvesters/                                  # Data collection
+│   │   ├── README.md                                # Harvester deployment guide
+│   │   ├── mastodon_harvester.py                    # Mastodon harvester
+│   │   ├── bluesky_harvester.py                     # BlueSky harvester
+│   │   ├── reddit_harvester.py                      # Reddit harvester
+│   │   ├── gdelt_harvester.py                       # GDELT CSV harvester
+│   │   ├── fuel_harvester.py                        # FuelWatch WA harvester
+│   │   ├── fuel_consumer.py                         # Fuel data consumer
+│   │   ├── fuel_backfill_wa.py                      # WA fuel historical data
+│   │   ├── fuel_backfill_nsw.py                     # NSW fuel historical data
+│   │   ├── social_consumer.py                       # Social posts consumer
+│   │   ├── backfill-wa-job.yaml                     # WA backfill K8s job
+│   │   ├── backfill-nsw-job.yaml                    # NSW backfill K8s job
+│   │   ├── build.sh                                 # Fission build script
 │   │   └── requirements.txt
 │   │
 │   ├── analyzers/
-│   │   ├── vader_sentiment.py         # VADER sentiment analysis
-│   │   ├── scenario_a/                # Scenario A
-│   │   │   └── api/sentiment_api.py
-│   │   ├── scenario_b/                # Scenario B
-│   │   │   ├── analytics/             # Analytics functions
-│   │   │   └── api/                   # API endpoints
-│   │   └── scenario_c/                # Scenario C
-│   │       ├── scenario_c_daily_aggregator.py
-│   │       └── scenario_c_fuel_sentiment_api.py
+│   │   ├── scenario_a/                              # Scenario A: Sentiment Analysis
+│   │   │   ├── api/
+│   │   │   │   └── sentiment_api.py                 # Scenario A REST API endpoint
+│   │   │   └── vader_sentiment.py                   # VADER sentiment processing
+│   │   │
+│   │   ├── scenario_b/                              # Scenario B: Topic Analysis
+│   │   │   ├── analytics/
+│   │   │   │   ├── topic_counts.py                  # Topic post count analytics
+│   │   │   │   ├── topic_platform_distribution.py   # Platform distribution analytics
+│   │   │   │   ├── topic_sentiment.py               # Topic sentiment analytics
+│   │   │   │   └── topic_trends.py                  # Topic trend analytics
+│   │   │   ├── api/
+│   │   │   │   ├── topic_counts_api.py              # Topic counts REST API
+│   │   │   │   ├── topic_platform_distribution_api.py # Platform distribution REST API
+│   │   │   │   ├── topic_sentiment_api.py           # Topic sentiment REST API
+│   │   │   │   └── topic_trends_api.py              # Topic trends REST API
+│   │   │   ├── SCENARIO_B_API_README.md             # Scenario B API documentation
+│   │   │   ├── SCENARIO_B_README.md                 # Scenario B documentation
+│   │   │   └── requirements.txt
+│   │   │
+│   │   └── scenario_c/                              # Scenario C: Fuel Price vs Sentiment
+│   │       ├── SCENARIO_C_API_README.md             # Scenario C API documentation
+│   │       ├── scenario_c_daily_aggregator.py       # Daily data aggregator
+│   │       └── scenario_c_fuel_sentiment_api.py     # Scenario C REST API endpoint
 │   │
-│   └── deploy/                        # Deployment scripts
+│   └── deploy/                                      # Deployment scripts
+│       ├── deploy_scenario_a_api.sh                 # Scenario A deployment script
+│       └── deploy_vader_sentiment.sh                # VADER deployment script
 │
-├── frontend/                          # Jupyter Notebook visualisations
+├── frontend/                                        # Jupyter Notebook visualisations
 │
 ├── database/
-│   ├── README.md                      # ES connection guide
+│   ├── README.md                                    # ES connection guide
 │   └── mappings/
 │       ├── social_posts_mapping.json
 │       ├── official_data_mapping.json
 │       └── gdelt_news_mapping.json
 │
 ├── test/
-│   └── test_harvesters.py             # Unit and API tests
+│   └── test_harvesters.py                           # Unit and API tests
 │
-├── data/                              # Static data files
-├── docs/                              # Report PDF
-└── llm/                               # LLM usage documentation
+├── data/                                            # Static data files
+├── docs/                                            # Report PDF
+└── llm/                                             # LLM usage documentation
 ```
 
 ---
