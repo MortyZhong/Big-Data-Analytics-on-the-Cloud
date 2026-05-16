@@ -12,10 +12,7 @@ urllib3.disable_warnings(
 INDEX_NAME = "social_posts"
 
 
-# =========================
 # ElasticSearch Connection
-# =========================
-
 def get_es_client():
 
     return Elasticsearch(
@@ -26,9 +23,7 @@ def get_es_client():
     )
 
 
-# =========================
 # Query Platform Topic Distribution
-# =========================
 
 def get_topic_platform_distribution():
 
@@ -93,11 +88,7 @@ def get_topic_platform_distribution():
         "data": results
     }
 
-
-# =========================
 # Main
-# =========================
-
 if __name__ == "__main__":
 
     try:
