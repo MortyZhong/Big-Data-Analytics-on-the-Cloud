@@ -6,25 +6,27 @@ import urllib3
 import json
 
 # Disable SSL warnings
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# =========================
-# ElasticSearch Connection
-# =========================
-
-es = Elasticsearch(
-    "https://localhost:9200",
-    basic_auth=("elastic", "elastic"),
-    verify_certs=False
+urllib3.disable_warnings(
+    urllib3.exceptions.InsecureRequestWarning
 )
 
 INDEX_NAME = "social_posts"
 
-# =========================
+# ElasticSearch Connection
+def get_es_client():
+
+    return Elasticsearch(
+        # "https://localhost:9200",  # local test
+        "https://elasticsearch-es-http.elastic:9200",
+        basic_auth=("elastic", "elastic"),
+        verify_certs=False
+    )
+
 # Query Topic Average Sentiment
-# =========================
 
 def get_topic_sentiment():
+
+    es = get_es_client()
 
     query = {
         "size": 0,
@@ -78,11 +80,7 @@ def get_topic_sentiment():
         "data": results
     }
 
-
-# =========================
 # Main
-# =========================
-
 if __name__ == "__main__":
 
     try:
@@ -96,5 +94,3 @@ if __name__ == "__main__":
     except Exception as e:
 
         print(f"Error: {e}")
-
-        
