@@ -26,9 +26,9 @@ This project analyses Australian public opinion on three global crisis topics �
 - FuelWatch WA (Western Australian Government official fuel price data)
 - NSW Fuel Check (New South Wales Government official fuel price data)
 
-**Three Scenarios:** 萧/丹
+**Three Scenarios:** 
 - **Scenario A:** Sentiment trends comparison across Mastodon, BlueSky, and Reddit on War/Tariff/Oil topics
-- **Scenario B:** Topic popularity and sentiment analysis using GDELT + social media platforms
+- **Scenario B:** Discussion intensity, trend dynamics, and platform-specific dissemination patterns of different topics (war, tariffs, and oil prices) on social media
 - **Scenario C:** Australian fuel prices across WA and NSW vs social media sentiment on oil topics
 
 ---
