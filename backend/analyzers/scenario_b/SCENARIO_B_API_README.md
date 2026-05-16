@@ -82,7 +82,7 @@ http://localhost:8888
 | topic_counts_api.py                | Total counts for war/tariff/oil     |
 | topic_trends_api.py                | Weekly topic trends                 |
 | topic_sentiment_api.py             | Average sentiment by topic          |
-| platform_topic_distribution_api.py | Topic distribution across platforms |
+| topic_platform_distribution_api.py | Topic distribution across platforms |
 
 ---
 
