@@ -134,11 +134,11 @@ deploy_function \
   "topic-platform-distribution-route" \
   "/api/scenario_b/topic_platform_distribution"
 
-deploy_function \
-  "posts-query-api" \
-  "scenario_b.api.posts_query_api.main" \
-  "posts-query-route" \
-  "/api/scenario_b/posts"
+#deploy_function \
+#  "posts-query-api" \
+#  "scenario_b.api.posts_query_api.main" \
+#  "posts-query-route" \
+#  "/api/scenario_b/posts"
 
 # Test APIs
 echo "Testing APIs..."
