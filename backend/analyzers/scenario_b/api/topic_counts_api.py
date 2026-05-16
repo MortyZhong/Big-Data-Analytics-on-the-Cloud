@@ -1,9 +1,7 @@
 # Team: 68 | Name: Yunxiao Gao | Student ID: 1718413
 from analytics.topic_counts import get_topic_counts
 
-# =========================
 # RESTful API
-# =========================
 
 def main():
 
@@ -21,10 +19,7 @@ def main():
         }
 
 
-# =========================
 # Local Test
-# =========================
-
 if __name__ == "__main__":
 
     result = main()
