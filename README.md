@@ -25,7 +25,7 @@ This project analyses Australian public opinion on three global crisis topics �
 - GDELT (Global news CSV files, filtered for Australia-related events)
 - FuelWatch WA (Western Australian Government official fuel price data)
 
-**Three Scenarios:**
+**Three Scenarios:** 萧/丹
 - **Scenario A:** Sentiment trends comparison across Mastodon, BlueSky, and Reddit on War/Tariff/Oil topics
 - **Scenario B:** Topic popularity and sentiment analysis using GDELT + social media platforms
 - **Scenario C:** Australian fuel prices (FuelWatch WA) vs social media sentiment on oil topics
