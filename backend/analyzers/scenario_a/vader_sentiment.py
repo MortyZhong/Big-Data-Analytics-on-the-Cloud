@@ -19,7 +19,7 @@ ELASTIC_USER = os.environ.get("ES_USER", "elastic")
 ELASTIC_PASSWORD = os.environ.get("ES_PASS", "elastic")
 
 INDEX_NAME = "social_posts"
-BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "50"))
+BATCH_SIZE = int(os.environ.get("BATCH_SIZE", "5000"))
 
 
 def get_es_client():
@@ -52,7 +52,7 @@ def build_query():
                     {"terms": {"topic": ["war", "tariff", "oil"]}}
                 ],
                 "must_not": [
-                    {"exists": {"field": "sentiment"}}
+                    {"exists": {"field": "sentiment_score"}}
                 ]
             }
         },
