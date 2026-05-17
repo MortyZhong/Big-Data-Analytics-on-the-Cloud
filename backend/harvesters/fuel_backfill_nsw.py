@@ -1,5 +1,5 @@
 # backend/harvesters/fuel_backfill_nsw.py
-# Team: 68 | Name: 舒奎元 | Student ID: 1345012
+# Team: 68 | Name: Kuiyuan Shu | Student ID: 1345012
 # NSW 油价历史回填：data.nsw.gov.au → Redis → official_data (ES)
 # 一次性脚本，回填 2026-02 ~ 2026-04（5 月走 daily harvester）。
 # Feb / Mar 走 CKAN datastore_search API，Apr 走 XLSX 下载。
