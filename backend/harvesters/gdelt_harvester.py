@@ -1,5 +1,5 @@
 # backend/harvesters/gdelt_harvester.py
-# Team: 68 | Name: all member
+# Team: 68 | Name: Yutao Fan | Student ID: 1810828
 # 新方案：直接下载 GDELT 每15分钟更新的 CSV 文件，不走 API，完全无限流
 
 import csv
