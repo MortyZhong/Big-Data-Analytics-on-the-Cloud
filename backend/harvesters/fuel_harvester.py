@@ -1,5 +1,5 @@
 # backend/harvesters/fuel_harvester.py
-# Team: 68 | Name: 舒奎元 | Student ID: 1345012
+# Team: 68 | Name: Kuiyuan Shu | Student ID: 1345012
 # 官方油价数据采集：FuelWatch WA + NSW FuelCheck → Redis → official_data (ES)
 
 import json
