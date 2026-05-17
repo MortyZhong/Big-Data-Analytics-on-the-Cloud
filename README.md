@@ -418,8 +418,7 @@ comp90024_team_68/
 │   └── test_harvesters.py                           # Unit and API tests
 │
 ├── data/                                            # Static data files
-├── docs/                                            # Report PDF
-└── llm/                                             # LLM usage documentation
+└── docs/                                            # Report PDF
 ```
 
 ---
