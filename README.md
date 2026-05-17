@@ -123,7 +123,7 @@ fission fn create --name fuel-consumer --env python39x \
   --pkg harvester-pkg --entrypoint "fuel_consumer.consume" \
   --secret harvester-secrets
 
-cd backend/analyzers/scenario_a
+cd backend/analyzers
 
 # Scenario A sentiment API
 fission fn create --name scenario-a-sentiment-api --env python39x \
