@@ -430,8 +430,8 @@ comp90024_team_68/
 | Index | Description |
 |---|---|
 | `social_posts` | Social media posts from all platforms (growing) |
-| `official_data` | FuelWatch WA fuel price data |
-| `scenario_c_daily` | Pre-aggregated daily fuel + sentiment data |
+| `official_data` | Official fuel price data (FuelWatch WA + NSW Fuel Check) |
+| `scenario_c_daily` | Pre-aggregated daily fuel price vs sentiment data |
 
 ## Fission Functions Summary 
 
@@ -443,7 +443,7 @@ comp90024_team_68/
 | gdelt-harvester | poolmgr | every 15min | Harvest GDELT CSV |
 | social-consumer | poolmgr | every 20min | Redis → ES |
 | vader-sentiment | poolmgr | every 10min | VADER analysis |
-| fuel-harvester | poolmgr | daily 22:00 | FuelWatch WA prices |
+| fuel-harvester | poolmgr | daily 22:00 | FuelWatch WA + NSW Fuel Check prices |
 | fuel-consumer | poolmgr | hourly | Fuel Redis → ES |
 | scenario-c-daily-aggregator | newdeploy | every 20min | Aggregate Scenario C |
 | scenario-a-sentiment-api | newdeploy | on demand | Scenario A API |
