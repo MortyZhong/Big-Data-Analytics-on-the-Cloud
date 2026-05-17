@@ -360,13 +360,12 @@ comp90024_team_68/
 ├── .gitignore
 │
 ├── backend/
-│   ├── harvesters/                                  # Data collection
-│   │   ├── README.md                                # Harvester deployment guide
+│   ├── harvesters/                                  # Data collection                               
 │   │   ├── mastodon_harvester.py                    # Mastodon harvester
 │   │   ├── bluesky_harvester.py                     # BlueSky harvester
 │   │   ├── reddit_harvester.py                      # Reddit harvester
 │   │   ├── gdelt_harvester.py                       # GDELT CSV harvester
-│   │   ├── fuel_harvester.py                        # FuelWatch WA harvester
+│   │   ├── fuel_harvester.py                        # FuelWatch WA + NSW harvester
 │   │   ├── fuel_consumer.py                         # Fuel data consumer
 │   │   ├── fuel_backfill_wa.py                      # WA fuel historical data
 │   │   ├── fuel_backfill_nsw.py                     # NSW fuel historical data
