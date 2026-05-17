@@ -1,5 +1,5 @@
 # backend/harvesters/fuel_backfill_wa.py
-# Team: 68 | Name: 舒奎元 | Student ID: 1345012
+# Team: 68 | Name: Kuiyuan Shu | Student ID: 1345012
 # WA 油价历史回填：FuelWatch 月度 CSV → Redis → official_data (ES)
 # 一次性脚本，回填 2026-02 ~ 2026-05；重复运行安全（Redis SET + ES doc_id 双重去重）。
 # 用法： python fuel_backfill_wa.py
