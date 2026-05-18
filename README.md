@@ -11,7 +11,7 @@
 | Yunxiao Gao |1718413 |
 
 **GitLab:** https://gitlab.unimelb.edu.au/lixinzhong/comp90024_team_68 \
-**Demonstration video:**
+**Demonstration video:** https://youtu.be/DnLFFQI_NLE
 
 ---
 
