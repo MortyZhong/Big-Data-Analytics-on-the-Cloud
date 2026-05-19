@@ -386,7 +386,7 @@ comp90024_team_68/
 ├── .gitignore
 │
 ├── backend/
-│   ├── harvesters/                                  # Data collection                               
+│   ├── harvesters/                                  # Data collection
 │   │   ├── mastodon_harvester.py                    # Mastodon harvester
 │   │   ├── bluesky_harvester.py                     # BlueSky harvester
 │   │   ├── reddit_harvester.py                      # Reddit harvester
@@ -403,8 +403,7 @@ comp90024_team_68/
 │   │
 │   ├── analyzers/
 │   │   ├── scenario_a/                              # Scenario A: Sentiment Analysis
-│   │   │   ├── api/
-│   │   │   │   └── sentiment_api.py                 # Scenario A REST API endpoint
+│   │   │   ├── sentiment_api.py                     # Scenario A REST API endpoint
 │   │   │   └── vader_sentiment.py                   # VADER sentiment processing
 │   │   │
 │   │   ├── scenario_b/                              # Scenario B: Topic Analysis
@@ -418,25 +417,24 @@ comp90024_team_68/
 │   │   │   │   ├── topic_platform_distribution_api.py # Platform distribution REST API
 │   │   │   │   ├── topic_sentiment_api.py           # Topic sentiment REST API
 │   │   │   │   └── topic_trends_api.py              # Topic trends REST API
-│   │   │   ├── SCENARIO_B_API_README.md             # Scenario B API documentation
-│   │   │   ├── SCENARIO_B_README.md                 # Scenario B documentation
 │   │   │   └── requirements.txt
 │   │   │
 │   │   └── scenario_c/                              # Scenario C: Fuel Price vs Sentiment
-│   │       ├── SCENARIO_C_API_README.md             # Scenario C API documentation
 │   │       ├── scenario_c_daily_aggregator.py       # Daily data aggregator
 │   │       └── scenario_c_fuel_sentiment_api.py     # Scenario C REST API endpoint
 │   │
 │   └── deploy/                                      # Deployment scripts
 │       ├── deploy_scenario_a_api.sh                 # Scenario A deployment script
+│       ├── deploy_scenario_b_api.sh                 # Scenario B deployment script
+│       ├── deploy_scenario_c_api.sh                 # Scenario C deployment script
+│       ├── deploy_scenario_c_aggregator.sh          # Scenario C aggregator script
 │       └── deploy_vader_sentiment.sh                # VADER deployment script
 │
-├── ├── frontend/                                        # Jupyter Notebook visualisations
-│   └── The final version of the front-end displayl.ipynb  # 16-view interactive dashboard                                    
+├── frontend/                                        # Jupyter Notebook visualisations
+│   └── The_final_version_of_the_front-end_displayl.ipynb  # 16-view interactive dashboard
 │
 ├── database/
-│   ├── README.md                                    # ES connection guide
-│   └── mappings/
+│   └── mappings/                                    # ES index mappings
 │       ├── social_posts_mapping.json
 │       ├── official_data_mapping.json
 │       └── gdelt_news_mapping.json
