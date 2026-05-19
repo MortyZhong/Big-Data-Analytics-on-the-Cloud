@@ -54,6 +54,18 @@ NSW Fuel Check ──→                    ↓
 
 ---
 
+## Frontend Telemetry Dashboard (Visualization)
+
+The frontend is a highly interactive, 16-view command-center style dashboard built with **Jupyter Notebook**, **Plotly**, and **ipywidgets**. It dynamically fetches data from the backend Fission REST APIs and visualizes the results of all scenarios.
+
+**Key Features:**
+- **Executive Dark Tech UI:** A premium, low-saturation cyberpunk aesthetic with custom CSS-like rendering, HUD effects, glass panels, and grid tick adjustments.
+- **16 Matrix Views:** Comprehensive visual coverage including spline streams, stacked/grouped log-axis bar charts, donut topologies, radar grids, and dual-axis econometric correlations.
+- **Animated Data Streams:** Implements Plotly frame animations (slicing) for time-series data, allowing users to play the data stream dynamically.
+- **Self-Healing API Gateway:** Safely handles timeouts and connection errors (e.g., missing port-forwarding) by returning fallback empty DataFrames without crashing the UI.
+
+---
+
 ## Installation
 
 > Note: The following assumes a Kubernetes cluster, Fission, ElasticSearch and Redis are already set up as per the workshop instructions.
@@ -311,13 +323,28 @@ curl http://localhost:8888/api/scenario_c/fuel_sentiment_data
 curl "http://localhost:8888/api/scenario_c/fuel_sentiment_data?fuel_type=u91"
 ```
 
-### Step 4: Open Jupyter Notebook 涛子
+### Step 4: Run the Interactive Dashboard (Frontend)
 
-```bash
-# Ensure port-forward is running (Step 1)
-cd frontend/
-jupyter notebook
-```
+The frontend requires specific Python libraries to render the interactive UI and Plotly animations.
+
+1. **Install dependencies:**
+   ```bash
+   pip install pandas numpy plotly ipywidgets requests
+   ```
+
+2. **Ensure Port-Forwarding is Active:**
+   The dashboard fetches data from `http://localhost:9999/api`. You must ensure the Fission router is mapped to port `9999` (or update `BASE_URL` in Cell 2 of the notebook if using port `8888` as per Step 1).
+   ```bash
+   kubectl port-forward svc/router -n fission 9999:80 &
+   ```
+
+3. **Launch the Dashboard:**
+   Navigate to the `frontend/` directory and open the notebook.
+   ```bash
+   cd frontend/
+   jupyter notebook "The final version of the front-end displayl.ipynb"
+   ```
+   *Instructions: Run all cells (Cell 1 to Cell 4). Select the desired topic and matrix scenario from the dropdown menus, then click **RENDER PREMIUM VIEW** to visualize the data.*
 
 ---
 
@@ -329,7 +356,6 @@ jupyter notebook
 pip install pytest vaderSentiment requests redis
 pytest test/ -v
 ```
-
 ### Test Coverage (9 tests)
 
 | Test | What it tests |
@@ -405,7 +431,8 @@ comp90024_team_68/
 │       ├── deploy_scenario_a_api.sh                 # Scenario A deployment script
 │       └── deploy_vader_sentiment.sh                # VADER deployment script
 │
-├── frontend/                                        # Jupyter Notebook visualisations
+├── ├── frontend/                                        # Jupyter Notebook visualisations
+│   └── The final version of the front-end displayl.ipynb  # 16-view interactive dashboard                                    
 │
 ├── database/
 │   ├── README.md                                    # ES connection guide
