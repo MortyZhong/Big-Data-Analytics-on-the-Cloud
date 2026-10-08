@@ -1,19 +1,4 @@
-# COMP90024 - Cluster and Cloud Computing
-## Assignment 2: Big Data Analytics on the Cloud
-### Team 68
-
-| Name | Student ID |
-|---|---|
-| Lixin Zhong |1728613 |
-| Yutao Fan  |1810828 |
-| Kuiyuan Shu |1345012 |
-| Yueting Duan |1736334 |
-| Yunxiao Gao |1718413 |
-
-**GitLab:** https://gitlab.unimelb.edu.au/lixinzhong/comp90024_team_68 \
-**Demonstration video:** https://youtu.be/DnLFFQI_NLE
-
----
+## Disclaimer: This project was originally developed collaboratively with my team members on gitlab. It has been migrated here solely to keep my project resoures organized in one place.
 
 ## Project Overview
 
